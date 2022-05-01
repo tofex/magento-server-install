@@ -92,7 +92,7 @@ for server in "${serverList[@]}"; do
     fi
     redisSessionPassword=$(ini-parse "${currentPath}/../../../../env.properties" "no" "${redisSession}" "password")
     if [[ -n "${redisSessionPassword}" ]]; then
-      shutdownCommand="\\\$CLIEXEC -p \\\$REDISPORT -a ${redisSessionPassword} --no-auth-warning shutdown"
+      shutdownCommand="\\\$CLIEXEC -p \\\$REDISPORT -a ${redisSessionPassword} shutdown"
     else
       shutdownCommand="\\\$CLIEXEC -p \\\$REDISPORT shutdown"
     fi

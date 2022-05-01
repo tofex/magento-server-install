@@ -13,7 +13,7 @@ OPTIONS:
   -s  Save the data on disk (yes/no), default: no
   -y  Allow sync (yes/no), default: no
 
-Example: ${scriptName} -m 256 -s no
+Example: ${scriptName} -m 2048 -s no
 EOF
 }
 
@@ -83,23 +83,23 @@ fi
 
 for server in "${serverList[@]}"; do
   serverType=$(ini-parse "${currentPath}/../../../../env.properties" "yes" "${server}" "type")
-  redisSession=$(ini-parse "${currentPath}/../../../../env.properties" "yes" "${server}" "redisSession")
-  if [[ -n "${redisSession}" ]]; then
-    redisSessionPort=$(ini-parse "${currentPath}/../../../../env.properties" "yes" "${redisSession}" "port")
-    if [[ -z "${redisSessionPort}" ]]; then
-      echo "No Redis session port specified!"
+  redisCache=$(ini-parse "${currentPath}/../../../../env.properties" "yes" "${server}" "redisCache")
+  if [[ -n "${redisCache}" ]]; then
+    redisCachePort=$(ini-parse "${currentPath}/../../../../env.properties" "yes" "${redisCache}" "port")
+    if [[ -z "${redisCachePort}" ]]; then
+      echo "No Redis cache port specified!"
       exit 1
     fi
-    redisSessionPassword=$(ini-parse "${currentPath}/../../../../env.properties" "no" "${redisSession}" "password")
-    if [[ -n "${redisSessionPassword}" ]]; then
-      shutdownCommand="\\\$CLIEXEC -p \\\$REDISPORT -a ${redisSessionPassword} --no-auth-warning shutdown"
+    redisCachePassword=$(ini-parse "${currentPath}/../../../../env.properties" "no" "${redisCache}" "password")
+    if [[ -n "${redisCachePassword}" ]]; then
+      shutdownCommand="\\\$CLIEXEC -p \\\$REDISPORT -a ${redisCachePassword} shutdown"
     else
       shutdownCommand="\\\$CLIEXEC -p \\\$REDISPORT shutdown"
     fi
     if [[ "${serverType}" == "local" ]]; then
-      echo "--- Installing Redis session configuration on local server: ${server} ---"
+      echo "--- Installing Redis cache configuration on local server: ${server} ---"
       "${currentPath}/config-local.sh" \
-        -p "${redisSessionPort}" \
+        -p "${redisCachePort}" \
         -m "${maxMemory}" \
         -s "${save}" \
         -a "${allowSync}" \
@@ -107,7 +107,7 @@ for server in "${serverList[@]}"; do
         -i "${psyncAlias}" \
         -c "${shutdownCommand}"
     else
-      echo "--- Installing Redis session configuration on remote server: ${server} ---"
+      echo "--- Installing Redis cache configuration on remote server: ${server} ---"
     fi
   fi
 done

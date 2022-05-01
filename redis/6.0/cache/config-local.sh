@@ -10,14 +10,14 @@ usage: ${scriptName} options
 OPTIONS:
   -h  Show this message
   -p  Redis cache port
-  -m  Max memory to use
+  -m  Max memory to use in MB
   -s  Save (yes/no)
   -a  Allow syncing (yes/no)
   -y  Sync alias (reqired if allow syncing = no)
   -i  PSync alias (reqired if allow syncing = no)
   -c  Shutdown command
 
-Example: ${scriptName} -p 6379 -s yes -l no -s 12345 -a 98765 -c /usr/local/bin/redis_shutdown
+Example: ${scriptName} -p 6379 -m 2048 -s no -a no -y 12345 -i 98765 -c /usr/local/bin/redis_shutdown
 EOF
 }
 

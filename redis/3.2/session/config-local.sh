@@ -90,12 +90,9 @@ sudo service "redis_${redisSessionPort}" stop
 
 echo "Creating Redis session configuration at: /etc/redis/redis_${redisSessionPort}.conf"
 cat <<EOF | sudo tee "/etc/redis/redis_${redisSessionPort}.conf" > /dev/null
-acllog-max-len 128
 activerehashing no
-always-show-logo no
 aof-load-truncated yes
 aof-rewrite-incremental-fsync yes
-aof-use-rdb-preamble yes
 appendfilename "appendonly.aof"
 appendfsync everysec
 appendonly no
@@ -104,24 +101,17 @@ auto-aof-rewrite-percentage 100
 bind 0.0.0.0
 client-output-buffer-limit normal 0 0 0
 client-output-buffer-limit pubsub 32mb 8mb 60
-client-output-buffer-limit replica 256mb 64mb 60
 daemonize yes
 databases 16
 dbfilename ${redisSessionPort}.rdb
 dir /var/lib/redis/${redisSessionPort}
-dynamic-hz yes
 hash-max-ziplist-entries 512
 hash-max-ziplist-value 64
 hll-sparse-max-bytes 3000
 hz 10
-jemalloc-bg-thread yes
 latency-monitor-threshold 0
-lazyfree-lazy-expire no
-lazyfree-lazy-eviction no
-lazyfree-lazy-server-del no
-lazyfree-lazy-user-del no
-list-compress-depth 0
-list-max-ziplist-size -2
+list-max-ziplist-entries 512
+list-max-ziplist-value 64
 logfile /var/log/redis/${redisSessionPort}.log
 loglevel notice
 lua-time-limit 5000
@@ -132,26 +122,17 @@ notify-keyspace-events ""
 no-appendfsync-on-rewrite no
 pidfile /var/run/redis_${redisSessionPort}.pid
 port ${redisSessionPort}
-protected-mode no
 rdbchecksum yes
 rdbcompression yes
-rdb-del-sync-files no
-rdb-save-incremental-fsync yes
-replica-lazy-flush no
-replica-priority 100
-replica-read-only yes
-replica-serve-stale-data yes
 repl-disable-tcp-nodelay no
-repl-diskless-load disabled
 repl-diskless-sync no
 repl-diskless-sync-delay 5
 set-max-intset-entries 512
+slave-priority 100
+slave-serve-stale-data yes
 slowlog-log-slower-than 10000
 slowlog-max-len 128
 stop-writes-on-bgsave-error no
-stream-node-max-bytes 4096
-stream-node-max-entries 100
-supervised no
 tcp-backlog 511
 tcp-keepalive 300
 timeout 0

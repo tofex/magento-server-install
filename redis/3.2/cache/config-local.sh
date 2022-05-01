@@ -9,7 +9,7 @@ usage: ${scriptName} options
 
 OPTIONS:
   -h  Show this message
-  -p  Redis session port
+  -p  Redis cache port
   -m  Max memory to use in MB
   -s  Save (yes/no)
   -a  Allow syncing (yes/no)
@@ -17,7 +17,7 @@ OPTIONS:
   -i  PSync alias (reqired if allow syncing = no)
   -c  Shutdown command
 
-Example: ${scriptName} -p 6379 -m 128 -s no -a no -y 12345 -i 98765 -c /usr/local/bin/redis_shutdown
+Example: ${scriptName} -p 6379 -m 2048 -s no -a no -y 12345 -i 98765 -c /usr/local/bin/redis_shutdown
 EOF
 }
 
@@ -26,7 +26,7 @@ trim()
   echo -n "$1" | xargs
 }
 
-redisSessionPort=
+redisCachePort=
 maxMemory=
 save=
 allowSync=
@@ -37,7 +37,7 @@ shutdownCommand=
 while getopts hp:m:s:a:y:i:c:? option; do
   case "${option}" in
     h) usage; exit 1;;
-    p) redisSessionPort=$(trim "$OPTARG");;
+    p) redisCachePort=$(trim "$OPTARG");;
     m) maxMemory=$(trim "$OPTARG");;
     s) save=$(trim "$OPTARG");;
     a) allowSync=$(trim "$OPTARG");;
@@ -48,7 +48,7 @@ while getopts hp:m:s:a:y:i:c:? option; do
   esac
 done
 
-if [[ -z "${redisSessionPort}" ]]; then
+if [[ -z "${redisCachePort}" ]]; then
   echo "No port specified!"
   exit 1
 fi
@@ -85,17 +85,14 @@ if [[ -z "${shutdownCommand}" ]]; then
   exit 1
 fi
 
-echo "Stopping Redis session service"
-sudo service "redis_${redisSessionPort}" stop
+echo "Stopping Redis cache service"
+sudo service "redis_${redisCachePort}" stop
 
-echo "Creating Redis session configuration at: /etc/redis/redis_${redisSessionPort}.conf"
-cat <<EOF | sudo tee "/etc/redis/redis_${redisSessionPort}.conf" > /dev/null
-acllog-max-len 128
+echo "Creating Redis cache configuration at: /etc/redis/redis_${redisCachePort}.conf"
+cat <<EOF | sudo tee "/etc/redis/redis_${redisCachePort}.conf" > /dev/null
 activerehashing no
-always-show-logo no
 aof-load-truncated yes
 aof-rewrite-incremental-fsync yes
-aof-use-rdb-preamble yes
 appendfilename "appendonly.aof"
 appendfsync everysec
 appendonly no
@@ -104,25 +101,18 @@ auto-aof-rewrite-percentage 100
 bind 0.0.0.0
 client-output-buffer-limit normal 0 0 0
 client-output-buffer-limit pubsub 32mb 8mb 60
-client-output-buffer-limit replica 256mb 64mb 60
 daemonize yes
 databases 16
-dbfilename ${redisSessionPort}.rdb
-dir /var/lib/redis/${redisSessionPort}
-dynamic-hz yes
+dbfilename ${redisCachePort}.rdb
+dir /var/lib/redis/${redisCachePort}
 hash-max-ziplist-entries 512
 hash-max-ziplist-value 64
 hll-sparse-max-bytes 3000
 hz 10
-jemalloc-bg-thread yes
 latency-monitor-threshold 0
-lazyfree-lazy-expire no
-lazyfree-lazy-eviction no
-lazyfree-lazy-server-del no
-lazyfree-lazy-user-del no
-list-compress-depth 0
-list-max-ziplist-size -2
-logfile /var/log/redis/${redisSessionPort}.log
+list-max-ziplist-entries 512
+list-max-ziplist-value 64
+logfile /var/log/redis/${redisCachePort}.log
 loglevel notice
 lua-time-limit 5000
 maxmemory ${maxMemory}MB
@@ -130,28 +120,19 @@ maxmemory-policy allkeys-lru
 maxmemory-samples 5
 notify-keyspace-events ""
 no-appendfsync-on-rewrite no
-pidfile /var/run/redis_${redisSessionPort}.pid
-port ${redisSessionPort}
-protected-mode no
+pidfile /var/run/redis_${redisCachePort}.pid
+port ${redisCachePort}
 rdbchecksum yes
 rdbcompression yes
-rdb-del-sync-files no
-rdb-save-incremental-fsync yes
-replica-lazy-flush no
-replica-priority 100
-replica-read-only yes
-replica-serve-stale-data yes
 repl-disable-tcp-nodelay no
-repl-diskless-load disabled
 repl-diskless-sync no
 repl-diskless-sync-delay 5
 set-max-intset-entries 512
+slave-priority 100
+slave-serve-stale-data yes
 slowlog-log-slower-than 10000
 slowlog-max-len 128
 stop-writes-on-bgsave-error no
-stream-node-max-bytes 4096
-stream-node-max-entries 100
-supervised no
 tcp-backlog 511
 tcp-keepalive 300
 timeout 0
@@ -160,45 +141,45 @@ zset-max-ziplist-value 64
 EOF
 
 if [[ "${save}" == "yes" ]]; then
-  cat <<EOF | sudo tee -a "/etc/redis/redis_${redisSessionPort}.conf" > /dev/null
+  cat <<EOF | sudo tee -a "/etc/redis/redis_${redisCachePort}.conf" > /dev/null
 save 900 1
 save 300 10
 save 60 10000
 EOF
 fi
 
-if [[ -n "${redisSessionPassword}" ]]; then
-  cat <<EOF | sudo tee -a "/etc/redis/redis_${redisSessionPort}.conf" > /dev/null
-requirepass ${redisSessionPassword}
+if [[ -n "${redisCachePassword}" ]]; then
+  cat <<EOF | sudo tee -a "/etc/redis/redis_${redisCachePort}.conf" > /dev/null
+requirepass ${redisCachePassword}
 EOF
 fi
 
 if [[ "${allowSync}" == "no" ]]; then
-  cat <<EOF | sudo tee -a "/etc/redis/redis_${redisSessionPort}.conf" > /dev/null
+  cat <<EOF | sudo tee -a "/etc/redis/redis_${redisCachePort}.conf" > /dev/null
 rename-command SYNC ${syncAlias}
 rename-command PSYNC ${psyncAlias}
 EOF
 fi
 
-echo "Creating Redis service at: /etc/init.d/redis_${redisSessionPort}"
-cat <<EOF | sudo tee "/etc/init.d/redis_${redisSessionPort}" > /dev/null
+echo "Creating Redis service at: /etc/init.d/redis_${redisCachePort}"
+cat <<EOF | sudo tee "/etc/init.d/redis_${redisCachePort}" > /dev/null
 #!/bin/sh
 ### BEGIN INIT INFO
-# Provides: redis_${redisSessionPort}
+# Provides: redis_${redisCachePort}
 # Required-Start: \$network \$local_fs \$remote_fs
 # Required-Stop: \$network \$local_fs \$remote_fs
 # Default-Start: 2 3 4 5
 # Default-Stop: 0 1 6
 # Should-Start: \$syslog \$named
 # Should-Stop: \$syslog \$named
-# Short-Description: start and stop redis_${redisSessionPort}
+# Short-Description: start and stop redis_${redisCachePort}
 # Description: Redis daemon
 ### END INIT INFO
 EXEC=\$(which redis-server)
 CLIEXEC=\$(which redis-cli)
-PIDFILE="/var/run/redis_${redisSessionPort}.pid"
-CONF="/etc/redis/redis_${redisSessionPort}.conf"
-REDISPORT="${redisSessionPort}"
+PIDFILE="/var/run/redis_${redisCachePort}.pid"
+CONF="/etc/redis/redis_${redisCachePort}.conf"
+REDISPORT="${redisCachePort}"
 case "\$1" in
   start)
     if [ -f \$PIDFILE ]
@@ -246,5 +227,5 @@ EOF
 
 sudo systemctl daemon-reload
 
-echo "Starting Redis session service"
-sudo service "redis_${redisSessionPort}" start
+echo "Starting Redis cache service"
+sudo service "redis_${redisCachePort}" start
