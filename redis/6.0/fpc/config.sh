@@ -85,8 +85,8 @@ for server in "${serverList[@]}"; do
   serverType=$(ini-parse "${currentPath}/../../../../env.properties" "yes" "${server}" "type")
   redisFullPageCache=$(ini-parse "${currentPath}/../../../../env.properties" "yes" "${server}" "redisFPC")
   if [[ -n "${redisFullPageCache}" ]]; then
-    redisFullPageCachePassword=$(ini-parse "${currentPath}/../../../../env.properties" "yes" "${redisFullPageCache}" "port")
-    if [[ -z "${redisFullPageCachePassword}" ]]; then
+    redisFullPageCachePort=$(ini-parse "${currentPath}/../../../../env.properties" "yes" "${redisFullPageCache}" "port")
+    if [[ -z "${redisFullPageCachePort}" ]]; then
       echo "No Redis FPC port specified!"
       exit 1
     fi
@@ -99,7 +99,7 @@ for server in "${serverList[@]}"; do
     if [[ "${serverType}" == "local" ]]; then
       echo "--- Installing Redis FPC configuration on local server: ${server} ---"
       "${currentPath}/config-local.sh" \
-        -p "${redisFullPageCachePassword}" \
+        -p "${redisFullPageCachePort}" \
         -m "${maxMemory}" \
         -s "${save}" \
         -a "${allowSync}" \
