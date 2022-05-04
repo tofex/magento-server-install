@@ -9,7 +9,7 @@ usage: ${scriptName} options
 
 OPTIONS:
   -h  Show this message
-  -p  Redis session port
+  -p  Redis FPC port
   -m  Max memory to use in MB
   -s  Save (yes/no)
   -a  Allow syncing (yes/no)
@@ -26,7 +26,7 @@ trim()
   echo -n "$1" | xargs
 }
 
-redisCachePort=
+redisFullPageCachePort=
 maxMemory=
 save=
 allowSync=
@@ -37,7 +37,7 @@ shutdownCommand=
 while getopts hp:m:s:a:y:i:c:? option; do
   case "${option}" in
     h) usage; exit 1;;
-    p) redisCachePort=$(trim "$OPTARG");;
+    p) redisFullPageCachePort=$(trim "$OPTARG");;
     m) maxMemory=$(trim "$OPTARG");;
     s) save=$(trim "$OPTARG");;
     a) allowSync=$(trim "$OPTARG");;
@@ -48,7 +48,7 @@ while getopts hp:m:s:a:y:i:c:? option; do
   esac
 done
 
-if [[ -z "${redisCachePort}" ]]; then
+if [[ -z "${redisFullPageCachePort}" ]]; then
   echo "No port specified!"
   exit 1
 fi
@@ -85,11 +85,11 @@ if [[ -z "${shutdownCommand}" ]]; then
   exit 1
 fi
 
-echo "Stopping Redis cache service"
-sudo service "redis_${redisCachePort}" stop
+echo "Stopping Redis full page cache service"
+sudo service "redis_${redisFullPageCachePort}" stop
 
-echo "Creating Redis cache configuration at: /etc/redis/redis_${redisCachePort}.conf"
-cat <<EOF | sudo tee "/etc/redis/redis_${redisCachePort}.conf" > /dev/null
+echo "Creating Redis full page cache configuration at: /etc/redis/redis_${redisFullPageCachePort}.conf"
+cat <<EOF | sudo tee "/etc/redis/redis_${redisFullPageCachePort}.conf" > /dev/null
 acllog-max-len 128
 activerehashing no
 always-show-logo no
@@ -107,8 +107,8 @@ client-output-buffer-limit pubsub 32mb 8mb 60
 client-output-buffer-limit replica 256mb 64mb 60
 daemonize yes
 databases 16
-dbfilename ${redisCachePort}.rdb
-dir /var/lib/redis/${redisCachePort}
+dbfilename ${redisFullPageCachePort}.rdb
+dir /var/lib/redis/${redisFullPageCachePort}
 dynamic-hz yes
 hash-max-ziplist-entries 512
 hash-max-ziplist-value 64
@@ -122,7 +122,7 @@ lazyfree-lazy-server-del no
 lazyfree-lazy-user-del no
 list-compress-depth 0
 list-max-ziplist-size -2
-logfile /var/log/redis/${redisCachePort}.log
+logfile /var/log/redis/${redisFullPageCachePort}.log
 loglevel notice
 lua-time-limit 5000
 maxmemory ${maxMemory}MB
@@ -130,8 +130,8 @@ maxmemory-policy allkeys-lru
 maxmemory-samples 5
 notify-keyspace-events ""
 no-appendfsync-on-rewrite no
-pidfile /var/run/redis_${redisCachePort}.pid
-port ${redisCachePort}
+pidfile /var/run/redis_${redisFullPageCachePort}.pid
+port ${redisFullPageCachePort}
 protected-mode no
 rdbchecksum yes
 rdbcompression yes
@@ -160,45 +160,45 @@ zset-max-ziplist-value 64
 EOF
 
 if [[ "${save}" == "yes" ]]; then
-  cat <<EOF | sudo tee -a "/etc/redis/redis_${redisCachePort}.conf" > /dev/null
+  cat <<EOF | sudo tee -a "/etc/redis/redis_${redisFullPageCachePort}.conf" > /dev/null
 save 900 1
 save 300 10
 save 60 10000
 EOF
 fi
 
-if [[ -n "${redisCachePassword}" ]]; then
-  cat <<EOF | sudo tee -a "/etc/redis/redis_${redisCachePort}.conf" > /dev/null
-requirepass ${redisCachePassword}
+if [[ -n "${redisFullPageCachePassword}" ]]; then
+  cat <<EOF | sudo tee -a "/etc/redis/redis_${redisFullPageCachePort}.conf" > /dev/null
+requirepass ${redisFullPageCachePassword}
 EOF
 fi
 
 if [[ "${allowSync}" == "no" ]]; then
-  cat <<EOF | sudo tee -a "/etc/redis/redis_${redisCachePort}.conf" > /dev/null
+  cat <<EOF | sudo tee -a "/etc/redis/redis_${redisFullPageCachePort}.conf" > /dev/null
 rename-command SYNC ${syncAlias}
 rename-command PSYNC ${psyncAlias}
 EOF
 fi
 
-echo "Creating Redis service at: /etc/init.d/redis_${redisCachePort}"
-cat <<EOF | sudo tee "/etc/init.d/redis_${redisCachePort}" > /dev/null
+echo "Creating Redis service at: /etc/init.d/redis_${redisFullPageCachePort}"
+cat <<EOF | sudo tee "/etc/init.d/redis_${redisFullPageCachePort}" > /dev/null
 #!/bin/sh
 ### BEGIN INIT INFO
-# Provides: redis_${redisCachePort}
+# Provides: redis_${redisFullPageCachePort}
 # Required-Start: \$network \$local_fs \$remote_fs
 # Required-Stop: \$network \$local_fs \$remote_fs
 # Default-Start: 2 3 4 5
 # Default-Stop: 0 1 6
 # Should-Start: \$syslog \$named
 # Should-Stop: \$syslog \$named
-# Short-Description: start and stop redis_${redisCachePort}
+# Short-Description: start and stop redis_${redisFullPageCachePort}
 # Description: Redis daemon
 ### END INIT INFO
 EXEC=\$(which redis-server)
 CLIEXEC=\$(which redis-cli)
-PIDFILE="/var/run/redis_${redisCachePort}.pid"
-CONF="/etc/redis/redis_${redisCachePort}.conf"
-REDISPORT="${redisCachePort}"
+PIDFILE="/var/run/redis_${redisFullPageCachePort}.pid"
+CONF="/etc/redis/redis_${redisFullPageCachePort}.conf"
+REDISPORT="${redisFullPageCachePort}"
 case "\$1" in
   start)
     if [ -f \$PIDFILE ]
@@ -246,5 +246,5 @@ EOF
 
 sudo systemctl daemon-reload
 
-echo "Starting Redis cache service"
-sudo service "redis_${redisCachePort}" start
+echo "Starting Redis full page cache service"
+sudo service "redis_${redisFullPageCachePort}" start
