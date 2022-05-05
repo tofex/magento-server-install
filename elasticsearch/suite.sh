@@ -1,5 +1,15 @@
 #!/bin/bash -e
 
+versionCompare() {
+  if [[ "$1" == "$2" ]]; then
+    echo "0"
+  elif [[ "$1" = $(echo -e "$1\n$2" | sort -V | head -n1) ]]; then
+    echo "1"
+  else
+    echo "2"
+  fi
+}
+
 currentPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 cd "${currentPath}"
@@ -28,11 +38,15 @@ if [[ -z "${elasticsearchVersion}" ]]; then
   exit 1
 fi
 
-elasticsearchScript="${currentPath}/${elasticsearchVersion}/suite.sh"
+if [[ $(versionCompare "${magentoVersion}" "7.0") == 0 ]] || [[ $(versionCompare "${magentoVersion}" "7.0") == 2 ]]; then
+  elasticsearchScript="${currentPath}/${elasticsearchVersion}/suite.sh"
 
-if [[ ! -f "${elasticsearchScript}" ]]; then
-  echo "Missing Elasticsearch script: ${elasticsearchScript}"
-  exit 1
+  if [[ ! -f "${elasticsearchScript}" ]]; then
+    echo "Missing Elasticsearch script: ${elasticsearchScript}"
+    exit 1
+  fi
+
+  "${elasticsearchScript}"
+else
+  echo "Elasticsearch ${elasticsearchVersion} requires no suite plugins"
 fi
-
-"${elasticsearchScript}"
