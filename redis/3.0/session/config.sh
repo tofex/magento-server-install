@@ -60,22 +60,8 @@ currentPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 cd "${currentPath}"
 
-if [[ ! -f ${currentPath}/../../../../env.properties ]]; then
+if [[ ! -f "${currentPath}/../../../../env.properties" ]]; then
   echo "No environment specified!"
-  exit 1
-fi
-
-redisSessionHost=$(ini-parse "${currentPath}/../../../../env.properties" "yes" "project" "redisSessionHost")
-redisSessionPort=$(ini-parse "${currentPath}/../../../../env.properties" "yes" "project" "redisSessionPort")
-redisSessionPassword=$(ini-parse "${currentPath}/../../../../env.properties" "no" "project" "redisSessionPassword")
-
-if [[ -z "${redisSessionHost}" ]]; then
-  echo "No Redis session host specified!"
-  exit 1
-fi
-
-if [[ -z "${redisSessionPort}" ]]; then
-  echo "No Redis session port specified!"
   exit 1
 fi
 
