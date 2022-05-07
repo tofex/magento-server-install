@@ -38,6 +38,12 @@ if [[ -z "${elasticsearchVersion}" ]]; then
   exit 1
 fi
 
+magentoVersion=$(ini-parse "${currentPath}/../../env.properties" "yes" "install" "magentoVersion")
+if [[ -z "${magentoVersion}" ]]; then
+  echo "No magento version specified!"
+  exit 1
+fi
+
 if [[ $(versionCompare "${magentoVersion}" "7.0") == 0 ]] || [[ $(versionCompare "${magentoVersion}" "7.0") == 2 ]]; then
   elasticsearchScript="${currentPath}/${elasticsearchVersion}/suite.sh"
 

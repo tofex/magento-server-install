@@ -35,6 +35,16 @@ trim()
   echo -n "$1" | xargs
 }
 
+versionCompare() {
+  if [[ "$1" == "$2" ]]; then
+    echo "0"
+  elif [[ "$1" = $(echo -e "$1\n$2" | sort -V | head -n1) ]]; then
+    echo "1"
+  else
+    echo "2"
+  fi
+}
+
 serverType=
 sshUser=
 sshHost=
@@ -57,7 +67,7 @@ sslKeyFile="/etc/ssl/private/ssl-cert-snakeoil.key"
 overwrite="no"
 
 while getopts hs:u:t:w:n:v:b:e:d:i:r:c:m:f:a:p:q:l:k:o? option; do
-  case ${option} in
+  case "${option}" in
     h) usage; exit 1;;
     s) serverType=$(trim "$OPTARG");;
     u) sshUser=$(trim "$OPTARG");;
@@ -167,13 +177,12 @@ currentPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 cd "${currentPath}"
 
-if [[ ! -f ${currentPath}/../../../../env.properties ]]; then
+if [[ ! -f "${currentPath}/../../../../env.properties" ]]; then
   echo "No environment specified!"
   exit 1
 fi
 
 magentoVersion=$(ini-parse "${currentPath}/../../../../env.properties" "yes" "install" "magentoVersion")
-
 if [[ -z "${magentoVersion}" ]]; then
   echo "No magento version specified!"
   exit 1
@@ -192,6 +201,10 @@ magentoMode=$(ini-parse "${currentPath}/../../../../env.properties" "yes" "insta
 if [[ -z "${magentoMode}" ]]; then
   echo "No mage mode specified!"
   exit 1
+fi
+
+if [[ $(versionCompare "${magentoVersion}" "2.4.0") == 0 ]] || [[ $(versionCompare "${magentoVersion}" "2.4.0") == 2 ]]; then
+  webPath="${webPath}/pub"
 fi
 
 if [[ -z "${webUser}" ]]; then

@@ -9,10 +9,14 @@ usage: ${scriptName} options
 
 OPTIONS:
   -h  Show this message
+  -s  Server type (local/ssh)
+  -u  SSH user (required when type=ssh)
+  -t  SSH host (required when type=ssh)
+  -p  Web path to use
   -w  Web server name
   -o  Overwrite existing files (Optional)
 
-Example: ${scriptName} -t yes -f no
+Example: ${scriptName} -s local -p /var/www/magento/htdocs
 EOF
 }
 
@@ -29,7 +33,7 @@ webServer=
 overwrite=0
 
 while getopts hs:u:t:p:w:o? option; do
-  case ${option} in
+  case "${option}" in
     h) usage; exit 1;;
     s) serverType=$(trim "$OPTARG");;
     u) sshUser=$(trim "$OPTARG");;
@@ -73,7 +77,7 @@ currentPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 cd "${currentPath}"
 
-if [[ ! -f ${currentPath}/../../env.properties ]]; then
+if [[ ! -f "${currentPath}/../../env.properties" ]]; then
   echo "No environment specified!"
   exit 1
 fi
