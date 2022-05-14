@@ -695,8 +695,18 @@ EOF
   echo "Setting Magento entry with type: ${mageRunType} and code: ${mageRunCode}"
   cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${configName}.conf" > /dev/null
   SetEnv MAGE_MODE "${mageMode}"
+EOF
+  if [[ "${mageRunType}" != "default" ]]; then
+    cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${configName}.conf" > /dev/null
   SetEnv MAGE_RUN_TYPE "${mageRunType}"
+EOF
+  fi
+  if [[ "${mageRunCode}" != "default" ]]; then
+    cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${configName}.conf" > /dev/null
   SetEnv MAGE_RUN_CODE "${mageRunCode}"
+EOF
+  fi
+  cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${configName}.conf" > /dev/null
   LogLevel warn
   ErrorLog ${webRoot}/log/${configName}-apache-http-error.log
   CustomLog ${webRoot}/log/${configName}-apache-http-access.log custom
@@ -842,8 +852,18 @@ EOF
       Allow from all
     </Directory>
     SetEnv MAGE_MODE "${mageMode}"
+EOF
+  if [[ "${mageRunType}" != "default" ]]; then
+    cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${configName}.conf" > /dev/null
     SetEnv MAGE_RUN_TYPE "${mageRunType}"
+EOF
+  fi
+  if [[ "${mageRunCode}" != "default" ]]; then
+    cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${configName}.conf" > /dev/null
     SetEnv MAGE_RUN_CODE "${mageRunCode}"
+EOF
+  fi
+  cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${configName}.conf" > /dev/null
     LogLevel warn
     ErrorLog ${webRoot}/log/${configName}-apache-ssl-error.log
     CustomLog ${webRoot}/log/${configName}-apache-ssl-access.log custom
