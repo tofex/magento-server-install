@@ -70,67 +70,62 @@ if [[ "${#repositoryList[@]}" -eq 0 ]]; then
   exit 1
 fi
 
+repositories=$(IFS=,; printf '%s' "${repositoryList[*]}")
+
 downloaded=0
 
 for server in "${serverList[@]}"; do
   webServer=$(ini-parse "${currentPath}/../env.properties" "no" "${server}" "webServer")
+
   if [[ -n "${webServer}" ]]; then
     type=$(ini-parse "${currentPath}/../env.properties" "yes" "${server}" "type")
+    webPath=$(ini-parse "${currentPath}/../env.properties" "yes" "${server}" "webPath")
+
     if [[ "${type}" == "local" ]]; then
-      webPath=$(ini-parse "${currentPath}/../env.properties" "yes" "${server}" "webPath")
-      repositories=$( IFS=$','; echo "${repositoryList[*]}" )
       echo "--- Downloading on local server: ${server} ---"
+
       if [[ "${overwrite}" == 1 ]]; then
-        echo "Removing previous installation"
-        rm -rf "${webPath}"
-      fi
-      mkdir -p "${webPath}"
-      if [[ ${magentoVersion:0:1} == 1 ]]; then
-        for repository in "${repositories[@]}"; do
-          repositoryUrl=$(echo "${repository}" | cut -d"|" -f2)
-          repositoryComposerUser=$(echo "${repository}" | cut -d"|" -f3)
-          repositoryComposerPassword=$(echo "${repository}" | cut -d"|" -f4)
-          repositoryHostName=$(echo "${repositoryUrl}" | awk -F[/:] '{print $4}')
-          echo "Adding composer repository access to url: ${repositoryUrl}"
-          composer config --no-interaction -g "http-basic.${repositoryHostName}" "${repositoryComposerUser}" "${repositoryComposerPassword}"
-        done
-        echo "Creating composer project"
-        phpVersion=$(php -v | head -n 1 | cut -d " " -f 2 | cut -f1-2 -d".")
-        if [[ "${phpVersion}" == "5.4" ]]; then
-          jq ".repositories.tofex += {\"options\": {\"ssl\": {\"verify_peer\": false, \"allow_self_signed\": true}}}" ~/.composer/config.json | sponge ~/.composer/config.json
-          composer create-project "magento/project-${magentoEdition}-edition=${magentoVersion}-patch" --no-interaction --prefer-dist "${webPath}"
-        else
-          composer create-project --repository-url=https://composer.tofex.de/ "magento/project-${magentoEdition}-edition=${magentoVersion}-patch" --no-interaction --prefer-dist "${webPath}"
-        fi
-        #find "${webPath}" -type d -exec chmod 700 {} \; && find "${webPath}" -type f -exec chmod 600 {} \;
-        chmod o+w "${webPath}/var" "${webPath}/var/.htaccess" "${webPath}/app/etc"
-        chmod 755 "${webPath}/mage"
-        chmod -R o+w "${webPath}/media"
-        "${currentPath}/../ops/create-shared.sh" -f media -o
-        "${currentPath}/../ops/create-shared.sh" -f var -o
+        "${currentPath}/download-local.sh" \
+          -w "${webPath}" \
+          -r "${repositories}" \
+          -v "${magentoVersion}" \
+          -e "${magentoEdition}" \
+          -o
       else
-        for repository in "${repositories[@]}"; do
-          repositoryUrl=$(echo "${repository}" | cut -d"|" -f2)
-          repositoryComposerUser=$(echo "${repository}" | cut -d"|" -f3)
-          repositoryComposerPassword=$(echo "${repository}" | cut -d"|" -f4)
-          repositoryHostName=$(echo "${repositoryUrl}" | awk -F[/:] '{print $4}')
-          echo "Adding composer repository access to url: ${repositoryUrl}"
-          composer config --no-interaction -g "http-basic.${repositoryHostName}" "${repositoryComposerUser}" "${repositoryComposerPassword}"
-        done
-        echo "Creating composer project"
-        composer create-project --repository-url=https://repo.magento.com/ "magento/project-${magentoEdition}-edition=${magentoVersion}" --no-interaction --prefer-dist "${webPath}"
-        #find "${webPath}" -type d -exec chmod 700 {} \; && find "${webPath}" -type f -exec chmod 600 {} \;
-        chmod o+w "${webPath}/var" "${webPath}/var/.htaccess" "${webPath}/app/etc"
-        chmod 755 "${webPath}/bin/magento"
-        chmod -R o+w "${webPath}/pub/media"
-        if [[ "${magentoMode}" == "production" ]]; then
-          "${currentPath}/../ops/create-shared.sh" -f generated -o
-          echo "!!! Generated code folder is setup as symlink. Do not compile without real deployment process. !!!"
-        fi
-        "${currentPath}/../ops/create-shared.sh" -f pub/media -o
-        "${currentPath}/../ops/create-shared.sh" -f pub/static -o
-        "${currentPath}/../ops/create-shared.sh" -f var -o
+        "${currentPath}/download-local.sh" \
+          -w "${webPath}" \
+          -r "${repositories}" \
+          -v "${magentoVersion}" \
+          -e "${magentoEdition}"
       fi
+
+      downloaded=1
+    elif [[ "${type}" == "ssh" ]]; then
+      echo "--- Downloading on remote server: ${server} ---"
+      sshUser=$(ini-parse "${currentPath}/../env.properties" "yes" "${server}" "user")
+      sshHost=$(ini-parse "${currentPath}/../env.properties" "yes" "${server}" "host")
+
+      echo "Getting server fingerprint"
+      ssh-keyscan "${sshHost}" >> ~/.ssh/known_hosts
+
+      echo "Copying download script to ${sshUser}@${sshHost}:/tmp/download-local.sh"
+      scp -q "${currentPath}/download-local.sh" "${sshUser}@${sshHost}:/tmp/download-local.sh"
+      echo "Executing script at ${sshUser}@${sshHost}:/tmp/download-local.sh"
+      if [[ "${overwrite}" == 1 ]]; then
+        ssh "${sshUser}@${sshHost}" /tmp/download-local.sh \
+          -w "${webPath}" \
+          -r "\"${repositories}\"" \
+          -v "${magentoVersion}" \
+          -e "${magentoEdition}" \
+          -o
+      else
+        ssh "${sshUser}@${sshHost}" /tmp/download-local.sh \
+          -w "${webPath}" \
+          -r "\"${repositories}\"" \
+          -v "${magentoVersion}" \
+          -e "${magentoEdition}"
+      fi
+
       downloaded=1
     fi
   fi
@@ -139,4 +134,29 @@ done
 if [[ "${downloaded}" == 0 ]]; then
   echo "Found no webservers to download to"
   exit 1
+fi
+
+if [[ ${magentoVersion:0:1} == 1 ]]; then
+  "${currentPath}/../ops/create-shared.sh" \
+    -f media \
+    -o
+  "${currentPath}/../ops/create-shared.sh" \
+    -f var \
+    -o
+else
+  if [[ "${magentoMode}" == "production" ]]; then
+    "${currentPath}/../ops/create-shared.sh" \
+      -f generated \
+      -o
+    echo "!!! Generated code folder is setup as symlink. Do not compile without real deployment process. !!!"
+  fi
+  "${currentPath}/../ops/create-shared.sh" \
+    -f pub/media \
+    -o
+  "${currentPath}/../ops/create-shared.sh" \
+    -f pub/static \
+    -o
+  "${currentPath}/../ops/create-shared.sh" \
+    -f var \
+    -o
 fi
