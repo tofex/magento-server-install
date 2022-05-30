@@ -32,60 +32,44 @@ for server in "${serverList[@]}"; do
   if [[ -n "${webServer}" ]]; then
     type=$(ini-parse "${currentPath}/../env.properties" "yes" "${server}" "type")
     if [[ "${type}" == "local" ]]; then
-      webPath=$(ini-parse "${currentPath}/../env.properties" "yes" "${server}" "webPath")
       echo "--- Installing Magento demo data on local server: ${server} ---"
-      tmpDir=$(mktemp -d -t XXXXXXXXXXXXXXXX)
-      echo "Created temp dir: ${tmpDir}"
-      cd "${tmpDir}"
-      if [[ ${magentoVersion:0:1} == 1 ]]; then
-        if [[ -L "${webPath}/skin/frontend/rwd/default/images/media" ]]; then
-          rm -f "${webPath}/skin/frontend/rwd/default/images/media"
-        fi
-        if [[ "${magentoEdition}" == "community" ]]; then
-          echo "Downloading sample data from: https://www.googleapis.com/download/storage/v1/b/tofex_vm_data/o/magento-sample-data-1.9.2.4.tar.gz?alt=media"
-          curl -X GET -o magento-sample-data-1.9.2.4.tar.gz https://www.googleapis.com/download/storage/v1/b/tofex_vm_data/o/magento-sample-data-1.9.2.4.tar.gz?alt=media
-          gunzip magento-sample-data-1.9.2.4.tar.gz | cat
-          tar -xf magento-sample-data-1.9.2.4.tar
-          mkdir -p "${webPath}"
-          shopt -s dotglob
-          echo "Copying sample data"
-          cp -afR magento-sample-data-1.9.2.4/media/* "${webPath}/media/"
-          cp -afR magento-sample-data-1.9.2.4/skin/* "${webPath}/skin/"
-          echo "Importing sample data"
-          "${currentPath}/../mysql/import.sh" -i magento-sample-data-1.9.2.4/magento_sample_data_for_1.9.2.4.sql && echo "Import successful"
-        else
-          echo "Downloading sample data from: https://www.googleapis.com/download/storage/v1/b/tofex_vm_data/o/magento-sample-data-1.14.2.4.tar.gz?alt=media"
-          curl -X GET -o magento-sample-data-1.14.2.4.tar.gz https://www.googleapis.com/download/storage/v1/b/tofex_vm_data/o/magento-sample-data-1.14.2.4.tar.gz?alt=media
-          gunzip magento-sample-data-1.14.2.4.tar.gz | cat
-          tar -xf magento-sample-data-1.14.2.4.tar
-          mkdir -p "${webPath}"
-          shopt -s dotglob
-          echo "Copying sample data"
-          cp -afR magento-sample-data-1.14.2.4/media/* "${webPath}/media/"
-          mkdir -p "${webPath}/privatesales/"
-          cp -afR magento-sample-data-1.14.2.4/privatesales/* "${webPath}/privatesales/"
-          cp -afR magento-sample-data-1.14.2.4/skin/* "${webPath}/skin/"
-          echo "Importing sample data"
-          "${currentPath}/../mysql/import.sh" -i magento-sample-data-1.14.2.4/magento_sample_data_for_1.14.2.4.sql && echo "Import successful"
-        fi
-        "${currentPath}/../ops/create-shared.sh" -f skin/frontend/rwd/default/images/media -o
-      else
-        magentoVersion=$(echo "${magentoVersion}" | sed 's/-p[0-9]*$//')
-        echo "Downloading sample data from: https://github.com/magento/magento2-sample-data/archive/${magentoVersion}.zip"
-        wget -nv "https://github.com/magento/magento2-sample-data/archive/${magentoVersion}.zip"
-        unzip -q "${magentoVersion}.zip"
-        mkdir -p "${webPath}/app/code/Magento/"
-        mkdir -p "${webPath}/pub/media/"
-        rm -rf "${webPath}/pub/media/catalog/product/"
-        shopt -s dotglob
-        echo "Copying sample data"
-        cp -afR "magento2-sample-data-${magentoVersion}"/app/code/Magento/* "${webPath}/app/code/Magento/"
-        cp -afR "magento2-sample-data-${magentoVersion}"/pub/media/* "${webPath}/pub/media/"
-        echo "Cleaning up"
-        "${currentPath}/../ops/create-shared.sh" -f app/code/Magento -o
-      fi
-      echo "Deleting temp dir: ${tmpDir}"
-      rm -rf "${tmpDir}"
+      webPath=$(ini-parse "${currentPath}/../env.properties" "yes" "${server}" "webPath")
+
+      "${currentPath}/demo-local.sh" \
+        -w "${webPath}" \
+        -v "${magentoVersion}" \
+        -e "${magentoEdition}" \
+        -i "${currentPath}/../mysql/import.sh" \
+        -s "${currentPath}/../ops/create-shared.sh"
+    elif [[ "${type}" == "ssh" ]]; then
+      echo "--- Installing Magento demo data on remote server: ${server} ---"
+      sshUser=$(ini-parse "${currentPath}/../env.properties" "yes" "${server}" "user")
+      sshHost=$(ini-parse "${currentPath}/../env.properties" "yes" "${server}" "host")
+
+      echo "Getting server fingerprint"
+      ssh-keyscan "${sshHost}" >> ~/.ssh/known_hosts
+
+      echo "Copying script to ${sshUser}@${sshHost}:/tmp/demo-local.sh"
+      scp -q "${currentPath}/demo-local.sh" "${sshUser}@${sshHost}:/tmp/demo-local.sh"
+      echo "Copying script to ${sshUser}@${sshHost}:/tmp/mysql-import.sh"
+      scp -q "${currentPath}/../mysql/import.sh" "${sshUser}@${sshHost}:/tmp/mysql-import.sh"
+      echo "Copying script to ${sshUser}@${sshHost}:/tmp/ops-create-shared.sh"
+      scp -q "${currentPath}/../ops/create-shared.sh" "${sshUser}@${sshHost}:/tmp/ops-create-shared.sh"
+
+      echo "Executing script at ${sshUser}@${sshHost}:/tmp/demo-local.sh"
+      ssh "${sshUser}@${sshHost}" /tmp/demo-local.sh \
+        -w "${webPath}" \
+        -v "${magentoVersion}" \
+        -e "${magentoEdition}" \
+        -i "/tmp/mysql-import.sh" \
+        -s "/tmp/ops-create-shared.sh"
+
+      echo "Removing script from: ${sshUser}@${sshHost}:/tmp/demo-local.sh"
+      ssh "${sshUser}@${sshHost}" "rm -rf /tmp/demo-local.sh"
+      echo "Removing script from: ${sshUser}@${sshHost}:/tmp/mysql-import.sh"
+      ssh "${sshUser}@${sshHost}" "rm -rf /tmp/mysql-import.sh"
+      echo "Removing script from: ${sshUser}@${sshHost}:/tmp/ops-create-shared.sh"
+      ssh "${sshUser}@${sshHost}" "rm -rf /tmp/ops-create-shared.sh"
     fi
   fi
 done

@@ -9,7 +9,11 @@ usage: ${scriptName} options
 
 OPTIONS:
   -h  Show this message
-  -o  Overwrite existing files (Optional)
+  -w  Web path
+  -r  Repositories
+  -v  Magento version
+  -e  Magento edition
+  -o  Overwrite
 
 Example: ${scriptName} -o
 EOF
