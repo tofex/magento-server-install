@@ -23,10 +23,10 @@ for server in "${serverList[@]}"; do
   if [[ -n "${database}" ]]; then
     serverType=$(ini-parse "${currentPath}/../env.properties" "yes" "${server}" "type")
     if [[ "${serverType}" == "local" ]]; then
-      echo "--- Creating database user on local server: ${server} ---"
+      echo "--- Installing Magento on local server: ${server} ---"
       databaseHost="localhost"
     else
-      echo "--- Creating database user on remote server: ${server} ---"
+      echo "--- Installing Magento on remote server: ${server} ---"
       databaseHost=$(ini-parse "${currentPath}/../env.properties" "yes" "${server}" "host")
     fi
     break

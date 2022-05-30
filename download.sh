@@ -110,6 +110,7 @@ for server in "${serverList[@]}"; do
 
       echo "Copying download script to ${sshUser}@${sshHost}:/tmp/download-local.sh"
       scp -q "${currentPath}/download-local.sh" "${sshUser}@${sshHost}:/tmp/download-local.sh"
+
       echo "Executing script at ${sshUser}@${sshHost}:/tmp/download-local.sh"
       if [[ "${overwrite}" == 1 ]]; then
         ssh "${sshUser}@${sshHost}" /tmp/download-local.sh \
