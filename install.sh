@@ -23,10 +23,10 @@ for server in "${serverList[@]}"; do
   if [[ -n "${database}" ]]; then
     serverType=$(ini-parse "${currentPath}/../env.properties" "yes" "${server}" "type")
     if [[ "${serverType}" == "local" ]]; then
-      echo "--- Installing Magento on local server: ${server} ---"
+      echo "--- Installing Magento with local database: ${server} ---"
       databaseHost="localhost"
     else
-      echo "--- Installing Magento on remote server: ${server} ---"
+      echo "--- Installing Magento with remote database: ${server} ---"
       databaseHost=$(ini-parse "${currentPath}/../env.properties" "yes" "${server}" "host")
     fi
     break
@@ -98,36 +98,52 @@ if [[ -z "${mainHostName}" ]]; then
   exit 1
 fi
 
+"${currentPath}/../ops/cache-clean.sh"
+
 for server in "${serverList[@]}"; do
-  type=$(ini-parse "${currentPath}/../env.properties" "yes" "${server}" "type")
-  if [[ "${type}" == "local" ]]; then
+  webServer=$(ini-parse "${currentPath}/../env.properties" "no" "${server}" "webServer")
+
+  if [[ -n "${webServer}" ]]; then
+    serverType=$(ini-parse "${currentPath}/../env.properties" "yes" "${server}" "type")
     webPath=$(ini-parse "${currentPath}/../env.properties" "yes" "${server}" "webPath")
-    echo "--- Installing Magento on local server: ${server} ---"
-    "${currentPath}/../ops/cache-clean.sh"
-    cd "${webPath}"
-    if [[ ${magentoVersion:0:1} == 1 ]]; then
-      rm -rf app/etc/local.xml
-      php -f install.php -- --license_agreement_accepted yes \
-        --locale de_DE --timezone "Europe/Berlin" --default_currency EUR \
-        --db_host "${databaseHost}:${databasePort}" --db_name "${databaseName}" --db_user "${databaseUser}" --db_pass "${databasePassword}" \
-        --url "https://${mainHostName}/" --skip_url_validation --use_rewrites yes \
-        --use_secure yes --secure_base_url "https://${mainHostName}/" --use_secure_admin yes \
-        --admin_lastname Owner --admin_firstname Store --admin_email "admin@tofex.com" \
-        --admin_username admin --admin_password adminadminadmin123 \
-        --encryption_key "${cryptKey}"
-      "${currentPath}/../ops/create-shared.sh" -f app/etc/local.xml -o
-    else
-      rm -rf app/etc/env.php
-      bin/magento setup:install "--base-url=https://${mainHostName}/" "--base-url-secure=https://${mainHostName}/" \
-        "--db-host=${databaseHost}:${databasePort}" "--db-name=${databaseName}" "--db-user=${databaseUser}" "--db-password=${databasePassword}" \
-        --use-secure-admin=1 --backend-frontname=admin \
-        --admin-lastname=Owner --admin-firstname=Store --admin-email=admin@tofex.de \
-        --admin-user=admin --admin-password=adminadminadmin123 \
-        --language=de_DE --currency=EUR --timezone=Europe/Berlin \
-        --key "${cryptKey}" \
-        --session-save=files --use-rewrites=1
-      "${currentPath}/../ops/create-shared.sh" -f app/etc/env.php -o
-      "${currentPath}/../ops/create-shared.sh" -f app/etc/config.php -o
+
+    if [[ "${serverType}" == "local" ]]; then
+      echo "--- Installing Magento on local server: ${server} ---"
+
+      "${currentPath}/install-local.sh" \
+        -w "${webPath}" \
+        -v "${magentoVersion}" \
+        -o "${databaseHost}" \
+        -p "${databasePort}" \
+        -u "${databaseUser}" \
+        -s "${databasePassword}" \
+        -b "${databaseName}" \
+        -m "${mainHostName}" \
+        -c "${cryptKey}"
+    elif [[ "${serverType}" == "remote" ]]; then
+      echo "--- Installing Magento on remote server: ${server} ---"
+      sshUser=$(ini-parse "${currentPath}/../env.properties" "yes" "${server}" "user")
+      sshHost=$(ini-parse "${currentPath}/../env.properties" "yes" "${server}" "host")
+
+      echo "Copying script to ${sshUser}@${sshHost}:/tmp/install-local.sh"
+      scp -q "${currentPath}/install-local.sh" "${sshUser}@${sshHost}:/tmp/install-local.sh"
+
+      echo "Executing script at ${sshUser}@${sshHost}:/tmp/install-local.sh"
+      ssh "${sshUser}@${sshHost}" /tmp/install-local.sh \
+        -w "${webPath}" \
+        -v "${magentoVersion}" \
+        -o "${databaseHost}" \
+        -p "${databasePort}" \
+        -u "${databaseUser}" \
+        -s "${databasePassword}" \
+        -b "${databaseName}" \
+        -m "${mainHostName}" \
+        -c "${cryptKey}"
+
+      echo "Removing script from: ${sshUser}@${sshHost}:/tmp/install-local.sh"
+      ssh "${sshUser}@${sshHost}" "rm -rf /tmp/install-local.sh"
     fi
+
+    break
   fi
 done

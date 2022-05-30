@@ -122,7 +122,6 @@ fi
 
 for server in "${serverList[@]}"; do
   webServer=$(ini-parse "${currentPath}/../env.properties" "no" "${server}" "webServer")
-  database=$(ini-parse "${currentPath}/../env.properties" "no" "${server}" "database")
 
   if [[ -n "${webServer}" ]]; then
     type=$(ini-parse "${currentPath}/../env.properties" "yes" "${server}" "type")
@@ -163,5 +162,7 @@ for server in "${serverList[@]}"; do
       echo "Removing script from: ${sshUser}@${sshHost}:/tmp/ops-create-shared.sh"
       ssh "${sshUser}@${sshHost}" "rm -rf /tmp/ops-create-shared.sh"
     fi
+
+    break
   fi
 done
