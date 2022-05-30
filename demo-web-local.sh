@@ -12,10 +12,10 @@ OPTIONS:
   -w  Web path
   -v  Magento version
   -e  Magento edition
-  -i  Import script file name
   -s  Share script file name
+  -p  shared file path, default: shared
 
-Example: ${scriptName} -w /var/www/magento/htdocs -v 2.3.7 -e community -i /tmp/mysql-import.sh -i /tmp/create-shared.sh
+Example: ${scriptName} -w /var/www/magento/htdocs -v 2.3.7 -e community -s /tmp/ops-create-shared-local.sh -p shared
 EOF
 }
 
@@ -37,49 +37,50 @@ versionCompare() {
 webPath=
 magentoVersion=
 magentoEdition=
-importScript=
 shareScript=
+sharedPath=
 
-while getopts hw:v:e:i:s:? option; do
+while getopts hw:v:e:s:p:? option; do
   case "${option}" in
     h) usage; exit 1;;
     w) webPath=$(trim "$OPTARG");;
     v) magentoVersion=$(trim "$OPTARG");;
     e) magentoEdition=$(trim "$OPTARG");;
-    i) importScript=$(trim "$OPTARG");;
     s) shareScript=$(trim "$OPTARG");;
+    p) sharedPath=$(trim "$OPTARG");;
     ?) usage; exit 1;;
   esac
 done
 
 if [[ -z "${webPath}" ]]; then
-  echo "No web path to download specified!"
+  echo "No web path to install demo data specified!"
   exit 1
 fi
 
 if [[ -z "${magentoVersion}" ]]; then
-  echo "No Magento version to download specified!"
+  echo "No Magento version to install demo data specified!"
   exit 1
 fi
 
 if [[ -z "${magentoEdition}" ]]; then
-  echo "No Magento edition to download specified!"
-  exit 1
-fi
-
-if [[ -z "${importScript}" ]]; then
-  echo "No import script to download specified!"
+  echo "No Magento edition to install demo data specified!"
   exit 1
 fi
 
 if [[ -z "${shareScript}" ]]; then
-  echo "No share script to download specified!"
+  echo "No share script to install demo data specified!"
   exit 1
+fi
+
+if [[ -z "${sharedPath}" ]]; then
+  sharedPath="static"
 fi
 
 tmpDir=$(mktemp -d -t XXXXXXXXXXXXXXXX)
 echo "Created temp dir: ${tmpDir}"
 cd "${tmpDir}"
+
+webRoot=$(dirname "${webPath}")
 
 if [[ ${magentoVersion:0:1} == 1 ]]; then
   if [[ -L "${webPath}/skin/frontend/rwd/default/images/media" ]]; then
@@ -97,9 +98,6 @@ if [[ ${magentoVersion:0:1} == 1 ]]; then
     echo "Copying sample data"
     cp -afR magento-sample-data-1.9.2.4/media/* "${webPath}/media/"
     cp -afR magento-sample-data-1.9.2.4/skin/* "${webPath}/skin/"
-
-    echo "Importing sample data"
-    "${importScript}" -i magento-sample-data-1.9.2.4/magento_sample_data_for_1.9.2.4.sql && echo "Import successful"
   else
     echo "Downloading sample data from: https://www.googleapis.com/download/storage/v1/b/tofex_vm_data/o/magento-sample-data-1.14.2.4.tar.gz?alt=media"
     curl -X GET -o magento-sample-data-1.14.2.4.tar.gz https://www.googleapis.com/download/storage/v1/b/tofex_vm_data/o/magento-sample-data-1.14.2.4.tar.gz?alt=media
@@ -113,12 +111,13 @@ if [[ ${magentoVersion:0:1} == 1 ]]; then
     mkdir -p "${webPath}/privatesales/"
     cp -afR magento-sample-data-1.14.2.4/privatesales/* "${webPath}/privatesales/"
     cp -afR magento-sample-data-1.14.2.4/skin/* "${webPath}/skin/"
-
-    echo "Importing sample data"
-    "${importScript}" -i magento-sample-data-1.14.2.4/magento_sample_data_for_1.14.2.4.sql && echo "Import successful"
   fi
 
-  "${shareScript}" -f skin/frontend/rwd/default/images/media -o
+  "${shareScript}" \
+    -w "${webPath}" \
+    -s "${webRoot}/${sharedPath}" \
+    -f skin/frontend/rwd/default/images/media \
+    -o
 else
   magentoVersion=$(echo "${magentoVersion}" | sed 's/-p[0-9]*$//')
 
@@ -134,8 +133,11 @@ else
   cp -afR "magento2-sample-data-${magentoVersion}"/app/code/Magento/* "${webPath}/app/code/Magento/"
   cp -afR "magento2-sample-data-${magentoVersion}"/pub/media/* "${webPath}/pub/media/"
 
-  echo "Cleaning up"
-  "${shareScript}" -f app/code/Magento -o
+  "${shareScript}" \
+    -w "${webPath}" \
+    -s "${webRoot}/${sharedPath}" \
+    -f app/code/Magento \
+    -o
 fi
 
 echo "Deleting temp dir: ${tmpDir}"
