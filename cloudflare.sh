@@ -90,9 +90,16 @@ for server in "${serverList[@]}"; do
         exit 1
       fi
       echo "Getting external IP of remote server: ${server}"
+
+      echo "Getting server fingerprint"
+      ssh-keyscan "${sshHost}" >> ~/.ssh/known_hosts
+
       echo "Copying script to ${sshUser}@${sshHost}:/tmp/cloudflare.sh"
       scp -q "/tmp/cloudflare.sh" "${sshUser}@${sshHost}:/tmp/cloudflare.sh"
       externalIp=$(ssh "${sshUser}@${sshHost}" "/tmp/cloudflare.sh")
+      ssh "${sshUser}@${sshHost}" "rm -rf /tmp/cloudflare.sh"
+
+      echo "Removing script from: ${sshUser}@${sshHost}:/tmp/cloudflare.sh"
       ssh "${sshUser}@${sshHost}" "rm -rf /tmp/cloudflare.sh"
     fi
 

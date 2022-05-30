@@ -85,9 +85,16 @@ for server in "${serverList[@]}"; do
       if [[ -z "${bindAddress}" ]]; then
         bindAddress="${sshHost}"
       fi
+
+      echo "Getting server fingerprint"
+      ssh-keyscan "${sshHost}" >> ~/.ssh/known_hosts
+
       echo "Copying script to ${sshUser}@${sshHost}:/tmp/config-local.sh"
       scp -q "${currentPath}/config-local.sh" "${sshUser}@${sshHost}:/tmp/config-local.sh"
       ssh "${sshUser}@${sshHost}" /tmp/config-local.sh -b "${bindAddress}" -p "${databasePort}" -i "${serverId}" -c "${connections}" -s "${innodbBufferPoolSize}"
+
+      echo "Removing script from: ${sshUser}@${sshHost}:/tmp/config-local.sh"
+      ssh "${sshUser}@${sshHost}" "rm -rf /tmp/config-local.sh"
     fi
   fi
 done

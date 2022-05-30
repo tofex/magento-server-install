@@ -237,7 +237,11 @@ if [[ "${serverType}" == "local" ]]; then
     -k "${sslKeyFile}" \
     -o "${overwrite}"
 else
+  echo "Getting server fingerprint"
+  ssh-keyscan "${sshHost}" >> ~/.ssh/known_hosts
+
   installScriptName=$(basename "${installScript}")
+  echo "Copying script to ${sshUser}@${sshHost}:/tmp/${installScriptName}"
   scp -q "${installScript}" "${sshUser}@${sshHost}:/tmp/${installScriptName}"
   ssh "${sshUser}@${sshHost}" "/tmp/${installScriptName}" \
     -n "${configName}" \
@@ -260,4 +264,7 @@ else
     -l "${sslCertFile}" \
     -k "${sslKeyFile}" \
     -o "${overwrite}"
+
+  echo "Removing script from: ${sshUser}@${sshHost}:/tmp/${installScriptName}"
+  ssh "${sshUser}@${sshHost}" "rm -rf /tmp/${installScriptName}"
 fi

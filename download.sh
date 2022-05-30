@@ -126,6 +126,9 @@ for server in "${serverList[@]}"; do
           -e "${magentoEdition}"
       fi
 
+      echo "Removing script from: ${sshUser}@${sshHost}:/tmp/download-local.sh"
+      ssh "${sshUser}@${sshHost}" "rm -rf /tmp/download-local.sh"
+
       downloaded=1
     fi
   fi
