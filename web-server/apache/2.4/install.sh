@@ -266,5 +266,6 @@ else
     -o "${overwrite}"
 
   echo "Removing script from: ${sshUser}@${sshHost}:/tmp/${installScriptName}"
+  # shellcheck disable=SC2029
   ssh "${sshUser}@${sshHost}" "rm -rf /tmp/${installScriptName}"
 fi

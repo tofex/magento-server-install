@@ -875,7 +875,7 @@ fi
 echo "Enabling configuration at: /etc/apache2/sites-enabled/${configName}.conf"
 test ! -f "/etc/apache2/sites-enabled/${configName}.conf" && sudo a2ensite "${configName}.conf"
 
-if [[ -n $(which systemctl) ]]; then
+if [[ ! -f /.dockerenv ]]; then
   echo "Restarting Apache"
   sudo service apache2 restart
 fi
