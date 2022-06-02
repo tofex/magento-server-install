@@ -18,8 +18,10 @@ OPTIONS:
   -b  Name of the database
   -m  Main host name
   -c  Crypt key
+  -f  Share script file name
+  -a  shared file path, default: shared
 
-Example: ${scriptName} -o
+Example: ${scriptName} -w /var/www/magento/htdocs -v 2.3.7 -u magento -s magento -b magento -m dev.magento2.de -c 12345 -f /tmp/ops-create-shared-local.sh -a shared
 EOF
 }
 
@@ -37,8 +39,10 @@ databasePassword=
 databaseName=
 mainHostName=
 cryptKey=
+shareScript=
+sharedPath=
 
-while getopts hw:v:o:p:u:s:b:m:c:? option; do
+while getopts hw:v:o:p:u:s:b:m:c:f:a:? option; do
   case "${option}" in
     h) usage; exit 1;;
     w) webPath=$(trim "$OPTARG");;
@@ -50,6 +54,8 @@ while getopts hw:v:o:p:u:s:b:m:c:? option; do
     b) databaseName=$(trim "$OPTARG");;
     m) mainHostName=$(trim "$OPTARG");;
     c) cryptKey=$(trim "$OPTARG");;
+    f) shareScript=$(trim "$OPTARG");;
+    a) sharedPath=$(trim "$OPTARG");;
     ?) usage; exit 1;;
   esac
 done
@@ -102,6 +108,17 @@ if [[ -z "${cryptKey}" ]]; then
   exit 1
 fi
 
+if [[ -z "${shareScript}" ]]; then
+  echo "No share script to install demo data specified!"
+  exit 1
+fi
+
+if [[ -z "${sharedPath}" ]]; then
+  sharedPath="static"
+fi
+
+webRoot=$(dirname "${webPath}")
+
 cd "${webPath}"
 
 if [[ ${magentoVersion:0:1} == 1 ]]; then
@@ -114,7 +131,12 @@ if [[ ${magentoVersion:0:1} == 1 ]]; then
     --admin_lastname Owner --admin_firstname Store --admin_email "admin@tofex.com" \
     --admin_username admin --admin_password adminadminadmin123 \
     --encryption_key "${cryptKey}"
-  "${currentPath}/../ops/create-shared.sh" -f app/etc/local.xml -o
+
+  "${shareScript}" \
+    -w "${webPath}" \
+    -s "${webRoot}/${sharedPath}" \
+    -f app/etc/local.xml \
+    -o
 else
   rm -rf app/etc/env.php
   bin/magento setup:install "--base-url=https://${mainHostName}/" "--base-url-secure=https://${mainHostName}/" \
@@ -125,6 +147,15 @@ else
     --language=de_DE --currency=EUR --timezone=Europe/Berlin \
     --key "${cryptKey}" \
     --session-save=files --use-rewrites=1
-  "${currentPath}/../ops/create-shared.sh" -f app/etc/env.php -o
-  "${currentPath}/../ops/create-shared.sh" -f app/etc/config.php -o
+
+  "${shareScript}" \
+    -w "${webPath}" \
+    -s "${webRoot}/${sharedPath}" \
+    -f app/etc/env.php \
+    -o
+  "${shareScript}" \
+    -w "${webPath}" \
+    -s "${webRoot}/${sharedPath}" \
+    -f app/etc/config.php \
+    -o
 fi

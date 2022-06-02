@@ -79,7 +79,7 @@ if [[ -z "${databaseName}" ]]; then
 fi
 
 if [[ "${databaseServerType}" == "local" ]]; then
-  "${currentPath}/demo-db-local.sh" \
+  "${currentPath}/demo-local-db.sh" \
     -v "${magentoVersion}" \
     -e "${magentoEdition}" \
     -o "${databaseHost}" \
@@ -97,11 +97,11 @@ elif [[ "${databaseServerType}" == "ssh" ]]; then
 
   echo "Copying script to ${sshUser}@${databaseHost}:/tmp/mysql-import-local.sh"
   scp -q "${currentPath}/../mysql/import-local.sh" "${sshUser}@${databaseHost}:/tmp/mysql-import-local.sh"
-  echo "Copying script to ${sshUser}@${databaseHost}:/tmp/demo-db-local.sh"
-  scp -q "${currentPath}/demo-db-local.sh" "${sshUser}@${databaseHost}:/tmp/demo-db-local.sh"
+  echo "Copying script to ${sshUser}@${databaseHost}:/tmp/demo-local-db.sh"
+  scp -q "${currentPath}/demo-local-db.sh" "${sshUser}@${databaseHost}:/tmp/demo-local-db.sh"
 
-  echo "Executing script at ${sshUser}@${sshHost}:/tmp/demo-db-local.sh"
-  ssh "${sshUser}@${databaseHost}" "/tmp/demo-db-local.sh" \
+  echo "Executing script at ${sshUser}@${sshHost}:/tmp/demo-local-db.sh"
+  ssh "${sshUser}@${databaseHost}" "/tmp/demo-local-db.sh" \
     -v "${magentoVersion}" \
     -e "${magentoEdition}" \
     -o "${databaseHost}" \
@@ -113,8 +113,8 @@ elif [[ "${databaseServerType}" == "ssh" ]]; then
 
   echo "Removing script from: ${sshUser}@${sshHost}:/tmp/mysql-import-local.sh"
   ssh "${sshUser}@${databaseHost}" "rm -rf /tmp/mysql-import-local.sh"
-  echo "Removing script from: ${sshUser}@${sshHost}:/tmp/demo-db-local.sh"
-  ssh "${sshUser}@${databaseHost}" "rm -rf /tmp/demo-db-local.sh"
+  echo "Removing script from: ${sshUser}@${sshHost}:/tmp/demo-local-db.sh"
+  ssh "${sshUser}@${databaseHost}" "rm -rf /tmp/demo-local-db.sh"
 else
   echo "Invalid database server type: ${databaseServerType}"
   exit 1
@@ -130,7 +130,7 @@ for server in "${serverList[@]}"; do
     if [[ "${type}" == "local" ]]; then
       echo "--- Installing Magento demo web data on local server: ${server} ---"
 
-      "${currentPath}/demo-web-local.sh" \
+      "${currentPath}/demo-local-web.sh" \
         -w "${webPath}" \
         -v "${magentoVersion}" \
         -e "${magentoEdition}" \
@@ -143,24 +143,22 @@ for server in "${serverList[@]}"; do
       echo "Getting server fingerprint"
       ssh-keyscan "${sshHost}" >> ~/.ssh/known_hosts
 
-      echo "Copying script to ${sshUser}@${sshHost}:/tmp/demo-web-local.sh"
-      scp -q "${currentPath}/demo-web-local.sh" "${sshUser}@${sshHost}:/tmp/demo-web-local.sh"
       echo "Copying script to ${sshUser}@${sshHost}:/tmp/ops-create-shared-local.sh"
       scp -q "${currentPath}/../ops/create-shared-local.sh" "${sshUser}@${sshHost}:/tmp/ops-create-shared-local.sh"
+      echo "Copying script to ${sshUser}@${sshHost}:/tmp/demo-local-web.sh"
+      scp -q "${currentPath}/demo-local-web.sh" "${sshUser}@${sshHost}:/tmp/demo-local-web.sh"
 
-      echo "Executing script at ${sshUser}@${sshHost}:/tmp/demo-web-local.sh"
-      ssh "${sshUser}@${sshHost}" /tmp/demo-web-local.sh \
+      echo "Executing script at ${sshUser}@${sshHost}:/tmp/demo-local-web.sh"
+      ssh "${sshUser}@${sshHost}" /tmp/demo-local-web.sh \
         -w "${webPath}" \
         -v "${magentoVersion}" \
         -e "${magentoEdition}" \
         -s "/tmp/ops-create-shared-local.sh"
 
-      echo "Removing script from: ${sshUser}@${sshHost}:/tmp/demo-web-local.sh"
-      ssh "${sshUser}@${sshHost}" "rm -rf /tmp/demo-web-local.sh"
-      echo "Removing script from: ${sshUser}@${sshHost}:/tmp/mysql-import.sh"
-      ssh "${sshUser}@${sshHost}" "rm -rf /tmp/mysql-import.sh"
-      echo "Removing script from: ${sshUser}@${sshHost}:/tmp/ops-create-shared.sh"
-      ssh "${sshUser}@${sshHost}" "rm -rf /tmp/ops-create-shared.sh"
+      echo "Removing script from: ${sshUser}@${sshHost}:/tmp/ops-create-shared-local.sh"
+      ssh "${sshUser}@${sshHost}" "rm -rf /tmp/ops-create-shared-local.sh"
+      echo "Removing script from: ${sshUser}@${sshHost}:/tmp/demo-local-web.sh"
+      ssh "${sshUser}@${sshHost}" "rm -rf /tmp/demo-local-web.sh"
     fi
 
     break

@@ -15,6 +15,8 @@ if [[ "${#serverList[@]}" -eq 0 ]]; then
   exit 1
 fi
 
+"${currentPath}/../ops/cache-clean.sh"
+
 database=
 databaseHost=
 
@@ -98,8 +100,6 @@ if [[ -z "${mainHostName}" ]]; then
   exit 1
 fi
 
-"${currentPath}/../ops/cache-clean.sh"
-
 for server in "${serverList[@]}"; do
   webServer=$(ini-parse "${currentPath}/../env.properties" "no" "${server}" "webServer")
 
@@ -119,12 +119,18 @@ for server in "${serverList[@]}"; do
         -s "${databasePassword}" \
         -b "${databaseName}" \
         -m "${mainHostName}" \
-        -c "${cryptKey}"
-    elif [[ "${serverType}" == "remote" ]]; then
+        -c "${cryptKey}" \
+        -f "${currentPath}/../ops/create-shared-local.sh"
+    elif [[ "${serverType}" == "ssh" ]]; then
       echo "--- Installing Magento on remote server: ${server} ---"
       sshUser=$(ini-parse "${currentPath}/../env.properties" "yes" "${server}" "user")
       sshHost=$(ini-parse "${currentPath}/../env.properties" "yes" "${server}" "host")
 
+      echo "Getting server fingerprint"
+      ssh-keyscan "${sshHost}" >> ~/.ssh/known_hosts
+
+      echo "Copying script to ${sshUser}@${sshHost}:/tmp/ops-create-shared-local.sh"
+      scp -q "${currentPath}/../ops/create-shared-local.sh" "${sshUser}@${sshHost}:/tmp/ops-create-shared-local.sh"
       echo "Copying script to ${sshUser}@${sshHost}:/tmp/install-local.sh"
       scp -q "${currentPath}/install-local.sh" "${sshUser}@${sshHost}:/tmp/install-local.sh"
 
@@ -138,8 +144,11 @@ for server in "${serverList[@]}"; do
         -s "${databasePassword}" \
         -b "${databaseName}" \
         -m "${mainHostName}" \
-        -c "${cryptKey}"
+        -c "${cryptKey}" \
+        -f "/tmp/ops-create-shared-local.sh"
 
+      echo "Removing script from: ${sshUser}@${sshHost}:/tmp/ops-create-shared-local.sh"
+      ssh "${sshUser}@${sshHost}" "rm -rf /tmp/ops-create-shared-local.sh"
       echo "Removing script from: ${sshUser}@${sshHost}:/tmp/install-local.sh"
       ssh "${sshUser}@${sshHost}" "rm -rf /tmp/install-local.sh"
     fi
