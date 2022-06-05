@@ -9,16 +9,16 @@ usage: ${scriptName} options
 
 OPTIONS:
   -h  Show this message
-  -v  Magento version
+  -m  Magento version
   -e  Magento edition
   -o  Database host, default: localhost
   -p  Database port, default: 3306
   -u  Name of the database user
-  -w  Password of the database user
+  -s  Password of the database user
   -b  Name of the database to import into
   -i  Import script file name
 
-Example: ${scriptName} -v 2.3.7 -e community -i /tmp/mysql-import.sh
+Example: ${scriptName} -m 2.3.7 -e community -u magento2 -s magento2 -b magento2 -i /tmp/mysql-import.sh
 EOF
 }
 
@@ -46,16 +46,19 @@ databasePassword=
 databaseName=
 importScript=
 
-while getopts hv:e:o:p:u:w:b:i:? option; do
+while getopts hm:e:d:o:p:u:s:b:t:v:i:? option; do
   case "${option}" in
     h) usage; exit 1;;
-    v) magentoVersion=$(trim "$OPTARG");;
+    m) magentoVersion=$(trim "$OPTARG");;
     e) magentoEdition=$(trim "$OPTARG");;
+    d) ;;
     o) databaseHost=$(trim "$OPTARG");;
     p) databasePort=$(trim "$OPTARG");;
     u) databaseUser=$(trim "$OPTARG");;
-    w) databasePassword=$(trim "$OPTARG");;
+    s) databasePassword=$(trim "$OPTARG");;
     b) databaseName=$(trim "$OPTARG");;
+    t) ;;
+    v) ;;
     i) importScript=$(trim "$OPTARG");;
     ?) usage; exit 1;;
   esac

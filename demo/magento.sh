@@ -9,13 +9,13 @@ usage: ${scriptName} options
 
 OPTIONS:
   -h  Show this message
-  -w  Web path
-  -v  Magento version
+  -m  Magento version
   -e  Magento edition
+  -w  Web path
   -s  Share script file name
-  -p  shared file path, default: shared
+  -a  shared file path, default: shared
 
-Example: ${scriptName} -w /var/www/magento/htdocs -v 2.3.7 -e community -s /tmp/ops-create-shared-local.sh -p shared
+Example: ${scriptName} -m 2.3.7 -e community -w /var/www/magento/htdocs -s /tmp/ops-create-shared-local.sh -a shared
 EOF
 }
 
@@ -34,28 +34,33 @@ versionCompare() {
   fi
 }
 
-webPath=
 magentoVersion=
 magentoEdition=
+webPath=
 shareScript=
 sharedPath=
 
-while getopts hw:v:e:s:p:? option; do
+while getopts hm:e:d:r:w:u:g:t:v:p:z:x:y:s:a:? option; do
   case "${option}" in
     h) usage; exit 1;;
-    w) webPath=$(trim "$OPTARG");;
-    v) magentoVersion=$(trim "$OPTARG");;
+    m) magentoVersion=$(trim "$OPTARG");;
     e) magentoEdition=$(trim "$OPTARG");;
+    d) ;;
+    r) ;;
+    w) webPath=$(trim "$OPTARG");;
+    u) ;;
+    g) ;;
+    t) ;;
+    v) ;;
+    p) ;;
+    z) ;;
+    x) ;;
+    y) ;;
     s) shareScript=$(trim "$OPTARG");;
-    p) sharedPath=$(trim "$OPTARG");;
+    a) sharedPath=$(trim "$OPTARG");;
     ?) usage; exit 1;;
   esac
 done
-
-if [[ -z "${webPath}" ]]; then
-  echo "No web path to install demo data specified!"
-  exit 1
-fi
 
 if [[ -z "${magentoVersion}" ]]; then
   echo "No Magento version to install demo data specified!"
@@ -64,6 +69,11 @@ fi
 
 if [[ -z "${magentoEdition}" ]]; then
   echo "No Magento edition to install demo data specified!"
+  exit 1
+fi
+
+if [[ -z "${webPath}" ]]; then
+  echo "No web path to install demo data specified!"
   exit 1
 fi
 

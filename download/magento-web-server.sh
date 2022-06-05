@@ -9,13 +9,13 @@ usage: ${scriptName} options
 
 OPTIONS:
   -h  Show this message
-  -w  Web path
-  -r  Repositories
-  -v  Magento version
+  -m  Magento version
   -e  Magento edition
+  -r  Repositories
+  -w  Web path
   -o  Overwrite
 
-Example: ${scriptName} -o
+Example: ${scriptName} -m 2.3.7 -e community -r "composer|https://repo.magento.com|12345|67890"
 EOF
 }
 
@@ -34,33 +34,32 @@ versionCompare() {
   fi
 }
 
-webPath=
-repositories=
 magentoVersion=
 magentoEdition=
+repositories=
+webPath=
 overwrite=0
 
-while getopts hw:r:v:e:o? option; do
+while getopts hm:e:d:r:w:u:g:t:v:p:z:x:y:o? option; do
   case "${option}" in
     h) usage; exit 1;;
-    w) webPath=$(trim "$OPTARG");;
-    r) repositories=$(trim "$OPTARG");;
-    v) magentoVersion=$(trim "$OPTARG");;
+    m) magentoVersion=$(trim "$OPTARG");;
     e) magentoEdition=$(trim "$OPTARG");;
+    d) ;;
+    r) repositories=$(trim "$OPTARG");;
+    w) webPath=$(trim "$OPTARG");;
+    u) ;;
+    g) ;;
+    t) ;;
+    v) ;;
+    p) ;;
+    z) ;;
+    x) ;;
+    y) ;;
     o) overwrite=1;;
     ?) usage; exit 1;;
   esac
 done
-
-if [[ -z "${webPath}" ]]; then
-  echo "No web path to download specified!"
-  exit 1
-fi
-
-if [[ -z "${repositories}" ]]; then
-  echo "No repositories to download specified!"
-  exit 1
-fi
 
 if [[ -z "${magentoVersion}" ]]; then
   echo "No Magento version to download specified!"
@@ -69,6 +68,16 @@ fi
 
 if [[ -z "${magentoEdition}" ]]; then
   echo "No Magento edition to download specified!"
+  exit 1
+fi
+
+if [[ -z "${repositories}" ]]; then
+  echo "No repositories to download specified!"
+  exit 1
+fi
+
+if [[ -z "${webPath}" ]]; then
+  echo "No web path to download specified!"
   exit 1
 fi
 
