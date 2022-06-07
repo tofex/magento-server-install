@@ -27,9 +27,10 @@ webPath=
 webUser=
 webGroup=
 
-while getopts hw:u:g:t:v:p:z:x:y:? option; do
+while getopts hn:w:u:g:t:v:p:z:x:y:? option; do
   case "${option}" in
     h) usage; exit 1;;
+    n) ;;
     w) webPath=$(trim "$OPTARG");;
     u) webUser=$(trim "$OPTARG");;
     g) webGroup=$(trim "$OPTARG");;

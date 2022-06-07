@@ -20,9 +20,10 @@ trim()
   echo -n "$1" | xargs
 }
 
-while getopts hw:u:g:t:v:p:z:x:y:? option; do
+while getopts hn:w:u:g:t:v:p:z:x:y:? option; do
   case "${option}" in
     h) usage; exit 1;;
+    n) ;;
     w) ;;
     u) ;;
     g) ;;
