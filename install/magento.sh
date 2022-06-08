@@ -32,7 +32,7 @@ mainHostName=
 shareScript=
 sharedPath=
 
-while getopts hm:e:d:r:c:o:p:u:s:b:t:v:w:k:g:l:i:j:z:x:y:n:f:a:? option; do
+while getopts hm:e:d:r:c:o:p:u:s:b:t:v:n:w:k:g:l:i:j:z:x:y:a:f:q:? option; do
   case "${option}" in
     h) usage; exit 1;;
     m) magentoVersion=$(trim "$OPTARG");;
@@ -47,6 +47,7 @@ while getopts hm:e:d:r:c:o:p:u:s:b:t:v:w:k:g:l:i:j:z:x:y:n:f:a:? option; do
     b) databaseName=$(trim "$OPTARG");;
     t) ;;
     v) ;;
+    n) ;;
     w) webPath=$(trim "$OPTARG");;
     k) ;;
     g) ;;
@@ -56,9 +57,9 @@ while getopts hm:e:d:r:c:o:p:u:s:b:t:v:w:k:g:l:i:j:z:x:y:n:f:a:? option; do
     z) ;;
     x) ;;
     y) ;;
-    n) mainHostName=$(trim "$OPTARG");;
+    a) mainHostName=$(trim "$OPTARG");;
     f) shareScript=$(trim "$OPTARG");;
-    a) sharedPath=$(trim "$OPTARG");;
+    q) sharedPath=$(trim "$OPTARG");;
     ?) usage; exit 1;;
   esac
 done

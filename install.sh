@@ -16,7 +16,7 @@ fi
 mainHostName=$("${currentPath}/../core/server/host/single.sh")
 
 "${currentPath}/../core/script/magento/database/web-server.sh" "${currentPath}/install/magento.sh" \
-  -n "${mainHostName}" \
+  -a "${mainHostName}" \
   -f "script:${currentPath}/../ops/create-shared/web-server.sh"
 
 if [[ "${magentoVersion:0:1}" == 1 ]]; then
