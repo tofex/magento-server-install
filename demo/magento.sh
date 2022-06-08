@@ -40,13 +40,15 @@ webPath=
 shareScript=
 sharedPath=
 
-while getopts hm:e:d:r:w:u:g:t:v:p:z:x:y:s:a:? option; do
+while getopts hm:e:d:r:c:n:w:u:g:t:v:p:z:x:y:s:a:? option; do
   case "${option}" in
     h) usage; exit 1;;
     m) magentoVersion=$(trim "$OPTARG");;
     e) magentoEdition=$(trim "$OPTARG");;
     d) ;;
     r) ;;
+    c) ;;
+    n) ;;
     w) webPath=$(trim "$OPTARG");;
     u) ;;
     g) ;;
