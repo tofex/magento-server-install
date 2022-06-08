@@ -90,8 +90,6 @@ tmpDir=$(mktemp -d -t XXXXXXXXXXXXXXXX)
 echo "Created temp dir: ${tmpDir}"
 cd "${tmpDir}"
 
-webRoot=$(dirname "${webPath}")
-
 if [[ ${magentoVersion:0:1} == 1 ]]; then
   if [[ -L "${webPath}/skin/frontend/rwd/default/images/media" ]]; then
     rm -f "${webPath}/skin/frontend/rwd/default/images/media"
@@ -125,7 +123,7 @@ if [[ ${magentoVersion:0:1} == 1 ]]; then
 
   "${shareScript}" \
     -w "${webPath}" \
-    -s "${webRoot}/${sharedPath}" \
+    -s "${sharedPath}" \
     -f skin/frontend/rwd/default/images/media \
     -o
 else
@@ -145,7 +143,7 @@ else
 
   "${shareScript}" \
     -w "${webPath}" \
-    -s "${webRoot}/${sharedPath}" \
+    -s "${sharedPath}" \
     -f app/code/Magento \
     -o
 fi

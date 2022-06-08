@@ -46,12 +46,14 @@ databasePassword=
 databaseName=
 importScript=
 
-while getopts hm:e:d:o:p:u:s:b:t:v:i:? option; do
+while getopts hm:e:d:r:c:o:p:u:s:b:t:v:i:? option; do
   case "${option}" in
     h) usage; exit 1;;
     m) magentoVersion=$(trim "$OPTARG");;
     e) magentoEdition=$(trim "$OPTARG");;
     d) ;;
+    r) ;;
+    c) ;;
     o) databaseHost=$(trim "$OPTARG");;
     p) databasePort=$(trim "$OPTARG");;
     u) databaseUser=$(trim "$OPTARG");;
@@ -120,8 +122,8 @@ if [[ ${magentoVersion:0:1} == 1 ]]; then
     "${importScript}" \
       -o "${databaseHost}" \
       -p "${databasePort}" \
-      -e "${databaseUser}" \
-      -w "${databasePassword}" \
+      -u "${databaseUser}" \
+      -s "${databasePassword}" \
       -b "${databaseName}" \
       -i magento-sample-data-1.9.2.4/magento_sample_data_for_1.9.2.4.sql
   else
@@ -134,8 +136,8 @@ if [[ ${magentoVersion:0:1} == 1 ]]; then
     "${importScript}" \
       -o "${databaseHost}" \
       -p "${databasePort}" \
-      -e "${databaseUser}" \
-      -w "${databasePassword}" \
+      -u "${databaseUser}" \
+      -s "${databasePassword}" \
       -b "${databaseName}" \
       -i magento-sample-data-1.14.2.4/magento_sample_data_for_1.14.2.4.sql
   fi

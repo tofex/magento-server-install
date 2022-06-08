@@ -5,23 +5,13 @@ scriptName="${0##*/}"
 usage()
 {
 cat >&2 << EOF
+
 usage: ${scriptName} options
 
 OPTIONS:
   -h  Show this message
-  -w  Web path
-  -v  Magento version
-  -o  Database host, default: localhost
-  -p  Database port, default: 3306
-  -u  Name of the database user
-  -s  Password of the database user
-  -b  Name of the database
-  -m  Main host name
-  -c  Crypt key
-  -f  Share script file name
-  -a  shared file path, default: shared
 
-Example: ${scriptName} -w /var/www/magento/htdocs -v 2.3.7 -u magento -s magento -b magento -m dev.magento2.de -c 12345 -f /tmp/ops-create-shared-local.sh -a shared
+Example: ${scriptName}
 EOF
 }
 
@@ -30,43 +20,52 @@ trim()
   echo -n "$1" | xargs
 }
 
-webPath=
 magentoVersion=
+cryptKey=
 databaseHost=
 databasePort=
 databaseUser=
 databasePassword=
 databaseName=
+webPath=
 mainHostName=
-cryptKey=
 shareScript=
 sharedPath=
 
-while getopts hw:v:o:p:u:s:b:m:c:f:a:? option; do
+while getopts hm:e:d:r:c:o:p:u:s:b:t:v:w:k:g:l:i:j:z:x:y:n:f:a:? option; do
   case "${option}" in
     h) usage; exit 1;;
-    w) webPath=$(trim "$OPTARG");;
-    v) magentoVersion=$(trim "$OPTARG");;
+    m) magentoVersion=$(trim "$OPTARG");;
+    e) ;;
+    d) ;;
+    r) ;;
+    c) cryptKey=$(trim "$OPTARG");;
     o) databaseHost=$(trim "$OPTARG");;
     p) databasePort=$(trim "$OPTARG");;
     u) databaseUser=$(trim "$OPTARG");;
     s) databasePassword=$(trim "$OPTARG");;
     b) databaseName=$(trim "$OPTARG");;
-    m) mainHostName=$(trim "$OPTARG");;
-    c) cryptKey=$(trim "$OPTARG");;
+    t) ;;
+    v) ;;
+    w) webPath=$(trim "$OPTARG");;
+    k) ;;
+    g) ;;
+    l) ;;
+    i) ;;
+    j) ;;
+    z) ;;
+    x) ;;
+    y) ;;
+    n) mainHostName=$(trim "$OPTARG");;
     f) shareScript=$(trim "$OPTARG");;
     a) sharedPath=$(trim "$OPTARG");;
     ?) usage; exit 1;;
   esac
 done
 
-if [[ -z "${webPath}" ]]; then
-  echo "No web path to download specified!"
-  exit 1
-fi
-
 if [[ -z "${magentoVersion}" ]]; then
-  echo "No Magento version to download specified!"
+  echo "No Magento version to install specified!"
+  usage
   exit 1
 fi
 
@@ -79,45 +78,38 @@ if [[ -z "${databasePort}" ]]; then
 fi
 
 if [[ -z "${databaseUser}" ]]; then
-  echo "No database user specified!"
+  echo "No database user to install specified!"
   usage
   exit 1
 fi
 
 if [[ -z "${databasePassword}" ]]; then
-  echo "No database password specified!"
+  echo "No database password to install specified!"
   usage
   exit 1
 fi
 
 if [[ -z "${databaseName}" ]]; then
-  echo "No database name specified!"
+  echo "No database name to install specified!"
   usage
   exit 1
 fi
 
 if [[ -z "${mainHostName}" ]]; then
-  echo "No main host name specified!"
-  usage
-  exit 1
-fi
-
-if [[ -z "${cryptKey}" ]]; then
-  echo "No crypt key specified!"
+  echo "No main host name to install data specified!"
   usage
   exit 1
 fi
 
 if [[ -z "${shareScript}" ]]; then
-  echo "No share script to install demo data specified!"
+  echo "No share script to install data specified!"
+  usage
   exit 1
 fi
 
 if [[ -z "${sharedPath}" ]]; then
   sharedPath="static"
 fi
-
-webRoot=$(dirname "${webPath}")
 
 cd "${webPath}"
 
@@ -134,7 +126,7 @@ if [[ ${magentoVersion:0:1} == 1 ]]; then
 
   "${shareScript}" \
     -w "${webPath}" \
-    -s "${webRoot}/${sharedPath}" \
+    -s "${sharedPath}" \
     -f app/etc/local.xml \
     -o
 else
@@ -150,12 +142,13 @@ else
 
   "${shareScript}" \
     -w "${webPath}" \
-    -s "${webRoot}/${sharedPath}" \
+    -s "${sharedPath}" \
     -f app/etc/env.php \
     -o
+
   "${shareScript}" \
     -w "${webPath}" \
-    -s "${webRoot}/${sharedPath}" \
+    -s "${sharedPath}" \
     -f app/etc/config.php \
     -o
 fi
