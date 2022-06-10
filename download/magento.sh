@@ -24,13 +24,14 @@ trim()
 magentoVersion=
 magentoMode=
 
-while getopts hm:e:d:r:? option; do
+while getopts hm:e:d:r:c:? option; do
   case "${option}" in
     h) usage; exit 1;;
     m) magentoVersion=$(trim "$OPTARG");;
     e) ;;
     d) magentoMode=$(trim "$OPTARG");;
     r) ;;
+    c) ;;
     ?) usage; exit 1;;
   esac
 done

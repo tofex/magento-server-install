@@ -40,13 +40,15 @@ repositories=
 webPath=
 overwrite=0
 
-while getopts hm:e:d:r:w:u:g:t:v:p:z:x:y:o? option; do
+while getopts hm:e:d:r:c:n:w:u:g:t:v:p:z:x:y:o? option; do
   case "${option}" in
     h) usage; exit 1;;
     m) magentoVersion=$(trim "$OPTARG");;
     e) magentoEdition=$(trim "$OPTARG");;
     d) ;;
     r) repositories=$(trim "$OPTARG");;
+    c) ;;
+    n) ;;
     w) webPath=$(trim "$OPTARG");;
     u) ;;
     g) ;;
