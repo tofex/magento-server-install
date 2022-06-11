@@ -262,15 +262,20 @@ EOF
       done
     fi
     cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
-    Require env AllowIP
+    Allow from env=AllowIP
+    Allow from env=REDIRECT_AllowIP
 EOF
   fi
 
+    #SetEnvIf Request_URI ^/stripe/webhooks$ AllowUrl
+    #Allow from env=AllowUrl
+    #Allow from env=REDIRECT_AllowUrl
+
   cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
+    Order Allow,Deny
+    Satisfy any
     Options FollowSymLinks
     AllowOverride All
-    Order Allow,Deny
-    Allow from all
   </Directory>
 EOF
 
@@ -437,16 +442,21 @@ EOF
         done
       fi
       cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
-      Require env AllowIP
+      Allow from env=AllowIP
+      Allow from env=REDIRECT_AllowIP
 EOF
   fi
 
+      #SetEnvIf Request_URI ^/stripe/webhooks$ AllowUrl
+      #Allow from env=AllowUrl
+      #Allow from env=REDIRECT_AllowUrl
+
   echo "Setting Magento entry with mode: ${magentoMode}, scope: ${scope} and code: ${code}"
   cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
+      Order Allow,Deny
+      Satisfy any
       Options FollowSymLinks
       AllowOverride All
-      Order Allow,Deny
-      Allow from all
     </Directory>
     SetEnv MAGE_MODE "${magentoMode}"
 EOF
@@ -475,4 +485,5 @@ test ! -f "/etc/apache2/sites-enabled/${hostName}.conf" && sudo a2ensite "${host
 if [[ ! -f /.dockerenv ]]; then
   echo "Restarting Apache"
   sudo service apache2 restart
+  sleep 5
 fi
