@@ -20,72 +20,6 @@ trim()
   echo -n "$1" | xargs
 }
 
-executeScript()
-{
-  local serverName="${1}"
-  shift
-  local filePath="${1}"
-  shift
-  local parameters=("$@")
-
-  echo "--- Executing script at: ${filePath} on local server: ${serverName} ---"
-  "${filePath}" "${parameters[@]}"
-}
-
-executeScriptWithSSH()
-{
-  local serverName="${1}"
-  shift
-  local sshUser="${1}"
-  shift
-  local sshHost="${1}"
-  shift
-  local filePath="${1}"
-  shift
-  local parameters=("$@")
-
-  copyFileToSSH "${sshUser}" "${sshHost}" "${filePath}"
-
-  local fileName
-  fileName=$(basename "${filePath}")
-  local remoteFileName="/tmp/${fileName}"
-
-  echo "--- Executing script at: ${filePath} on remote server: ${serverName} [${sshUser}@${sshHost}] at: ${remoteFileName} ---"
-  ssh "${sshUser}@${sshHost}" "${remoteFileName}" "${parameters[@]}"
-
-  removeFileFromSSH "${sshUser}" "${sshHost}" "${remoteFileName}"
-}
-
-copyFileToSSH()
-{
-  local sshUser="${1}"
-  local sshHost="${2}"
-  local filePath="${3}"
-
-  local fileName
-  fileName=$(basename "${filePath}")
-  local remoteFileName="/tmp/${fileName}"
-
-  echo "Getting server fingerprint"
-  ssh-keyscan "${sshHost}" >> ~/.ssh/known_hosts 2>/dev/null
-
-  echo "Copying file from: ${filePath} to: ${sshUser}@${sshHost}:${remoteFileName}"
-  scp -q "${filePath}" "${sshUser}@${sshHost}:${remoteFileName}"
-}
-
-removeFileFromSSH()
-{
-  local sshUser="${1}"
-  local sshHost="${2}"
-  local filePath="${3}"
-
-  echo "Getting server fingerprint"
-  ssh-keyscan "${sshHost}" >> ~/.ssh/known_hosts 2>/dev/null
-
-  echo "Removing file from: ${sshUser}@${sshHost}:${filePath}"
-  ssh "${sshUser}@${sshHost}" "rm -rf ${filePath}"
-}
-
 overwrite="no"
 
 while getopts ho? option; do
@@ -123,5 +57,10 @@ fi
 "${currentPath}/../core/script/web-server/all.sh" "${currentPath}/web-server/[webServerType]/[webServerVersion]/web-server-log.sh"
 "${currentPath}/../core/script/host/web-servers.sh" "${currentPath}/web-server/host-web-server-basic-auth.sh"
 "${currentPath}/../core/script/host/web-servers.sh" "${currentPath}/web-server/[webServerType]/[webServerVersion]/host-web-server-magento${magentoVersion:0:1}.sh" \
-  -m "${magentoMode}" \
+  -m "${magentoVersion}" \
+  -d "${magentoMode}" \
   -j "${overwrite}"
+
+if [[ $(versionCompare "${magentoVersion}" "2.2.0") == 0 ]] || [[ $(versionCompare "${magentoVersion}" "2.2.0") == 2 ]]; then
+  "${currentPath}/../config/document-root.sh"
+fi

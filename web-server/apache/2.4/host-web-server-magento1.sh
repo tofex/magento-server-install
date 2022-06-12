@@ -28,7 +28,7 @@ OPTIONS:
   -f  Force SSL (yes/no), default: yes
   -i  Allow IPs without basic auth, separated by comma
   -b  Basic auth user name
-  -m  Magento mode (production or developer), default: production
+  -d  Magento mode (production or developer), default: production
   -j  Overwrite existing files (optional), default: no
 
 Example: ${scriptName} -w /var/www/magento/htdocs -n dev_magento2_de -o dev.magento2.de
@@ -61,7 +61,7 @@ basicAuthUserName=
 magentoMode=
 overwrite=
 
-while getopts hw:u:g:t:v:p:z:x:y:n:o:a:e:c:l:k:r:f:i:b:s:m:j:? option; do
+while getopts hw:u:g:t:v:p:z:x:y:n:o:a:e:c:l:k:r:f:i:b:s:m:d:j:? option; do
   case "${option}" in
     h) usage; exit 1;;
     w) webPath=$(trim "$OPTARG");;
@@ -85,7 +85,8 @@ while getopts hw:u:g:t:v:p:z:x:y:n:o:a:e:c:l:k:r:f:i:b:s:m:j:? option; do
     i) requireIp=$(trim "$OPTARG");;
     b) basicAuthUserName=$(trim "$OPTARG");;
     s) ;;
-    m) magentoMode=$(trim "$OPTARG");;
+    m) ;;
+    d) magentoMode=$(trim "$OPTARG");;
     j) overwrite=$(trim "$OPTARG");;
     ?) usage; exit 1;;
   esac

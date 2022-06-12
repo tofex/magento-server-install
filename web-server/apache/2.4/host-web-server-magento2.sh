@@ -28,16 +28,27 @@ OPTIONS:
   -f  Force SSL (yes/no), default: yes
   -i  Allow IPs without basic auth, separated by comma
   -b  Basic auth user name
-  -m  Magento mode (production or developer), default: production
+  -m  Magento version
+  -d  Magento mode (production or developer), default: production
   -j  Overwrite existing files (optional), default: no
 
-Example: ${scriptName} -w /var/www/magento/htdocs -n dev_magento2_de -o dev.magento2.de
+Example: ${scriptName} -w /var/www/magento/htdocs -n dev_magento2_de -o dev.magento2.de -m 2.3.7
 EOF
 }
 
 trim()
 {
   echo -n "$1" | xargs
+}
+
+versionCompare() {
+  if [[ "$1" == "$2" ]]; then
+    echo "0"
+  elif [[ "$1" = $(echo -e "$1\n$2" | sort -V | head -n1) ]]; then
+    echo "1"
+  else
+    echo "2"
+  fi
 }
 
 webPath=
@@ -61,7 +72,7 @@ basicAuthUserName=
 magentoMode=
 overwrite=
 
-while getopts hw:u:g:t:v:p:z:x:y:n:o:a:e:c:l:k:r:f:i:b:s:m:j:? option; do
+while getopts hw:u:g:t:v:p:z:x:y:n:o:a:e:c:l:k:r:f:i:b:s:m:d:j:? option; do
   case "${option}" in
     h) usage; exit 1;;
     w) webPath=$(trim "$OPTARG");;
@@ -85,7 +96,8 @@ while getopts hw:u:g:t:v:p:z:x:y:n:o:a:e:c:l:k:r:f:i:b:s:m:j:? option; do
     i) requireIp=$(trim "$OPTARG");;
     b) basicAuthUserName=$(trim "$OPTARG");;
     s) ;;
-    m) magentoMode=$(trim "$OPTARG");;
+    m) magentoVersion=$(trim "$OPTARG");;
+    d) magentoMode=$(trim "$OPTARG");;
     j) overwrite=$(trim "$OPTARG");;
     ?) usage; exit 1;;
   esac
@@ -187,6 +199,12 @@ else
   fi
 fi
 
+if [[ $(versionCompare "${magentoVersion}" "2.2.0") == 0 ]] || [[ $(versionCompare "${magentoVersion}" "2.2.0") == 2 ]]; then
+  documentRoot="${webPath}/pub/"
+else
+  documentRoot="${webPath}/"
+fi
+
 echo "Creating configuration at: /etc/apache2/sites-available/${hostName}.conf"
 
 if [[ "${forceSsl}" == "yes" ]] && [[ "${sslTerminated}" == "no" ]]; then
@@ -206,7 +224,7 @@ EOF
   fi
   cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
   ServerAdmin webmaster@localhost
-  DocumentRoot ${webPath}/
+  DocumentRoot ${documentRoot}/
   Redirect / https://${serverName}/
 </VirtualHost>
 EOF
@@ -225,7 +243,7 @@ EOF
   fi
   cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
   ServerAdmin webmaster@localhost
-  DocumentRoot ${webPath}/
+  DocumentRoot ${documentRoot}/
   <Directory ${webPath}/>
 EOF
 
@@ -405,7 +423,7 @@ EOF
   fi
   cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
     ServerAdmin webmaster@localhost
-    DocumentRoot ${webPath}/
+    DocumentRoot ${documentRoot}/
     <Directory ${webPath}/>
 EOF
 
