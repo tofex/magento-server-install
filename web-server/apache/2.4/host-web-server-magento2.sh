@@ -27,10 +27,11 @@ OPTIONS:
   -r  SSL terminated (yes/no), default: no
   -f  Force SSL (yes/no), default: yes
   -i  Allow IPs without basic auth, separated by comma
+  -j  Allow Url without basic auth, separated by comma
   -b  Basic auth user name
   -m  Magento version
   -d  Magento mode (production or developer), default: production
-  -j  Overwrite existing files (optional), default: no
+  -q  Overwrite existing files (optional), default: no
 
 Example: ${scriptName} -w /var/www/magento/htdocs -n dev_magento2_de -o dev.magento2.de -m 2.3.7
 EOF
@@ -68,11 +69,12 @@ sslKeyFile=
 sslTerminated=
 forceSsl=
 requireIp=
+allowUrl=
 basicAuthUserName=
 magentoMode=
 overwrite=
 
-while getopts hw:u:g:t:v:p:z:x:y:n:o:a:e:c:l:k:r:f:i:b:s:m:d:j:? option; do
+while getopts hw:u:g:t:v:p:z:x:y:n:o:a:e:c:l:k:r:f:i:j:b:s:m:d:q:? option; do
   case "${option}" in
     h) usage; exit 1;;
     w) webPath=$(trim "$OPTARG");;
@@ -94,11 +96,12 @@ while getopts hw:u:g:t:v:p:z:x:y:n:o:a:e:c:l:k:r:f:i:b:s:m:d:j:? option; do
     r) sslTerminated=$(trim "$OPTARG");;
     f) forceSsl=$(trim "$OPTARG");;
     i) requireIp=$(trim "$OPTARG");;
+    j) allowUrl=$(trim "$OPTARG");;
     b) basicAuthUserName=$(trim "$OPTARG");;
     s) ;;
     m) magentoVersion=$(trim "$OPTARG");;
     d) magentoMode=$(trim "$OPTARG");;
-    j) overwrite=$(trim "$OPTARG");;
+    q) overwrite=$(trim "$OPTARG");;
     ?) usage; exit 1;;
   esac
 done
@@ -177,6 +180,10 @@ if [[ "${requireIp}" == "-" ]]; then
   requireIp=
 fi
 
+if [[ "${allowUrl}" == "-" ]]; then
+  allowUrl=
+fi
+
 if [[ -z "${magentoMode}" ]]; then
   magentoMode="production"
 fi
@@ -200,9 +207,9 @@ else
 fi
 
 if [[ $(versionCompare "${magentoVersion}" "2.2.0") == 0 ]] || [[ $(versionCompare "${magentoVersion}" "2.2.0") == 2 ]]; then
-  documentRoot="${webPath}/pub/"
+  documentRoot="${webPath}/pub"
 else
-  documentRoot="${webPath}/"
+  documentRoot="${webPath}"
 fi
 
 echo "Creating configuration at: /etc/apache2/sites-available/${hostName}.conf"
@@ -283,11 +290,20 @@ EOF
     Allow from env=AllowIP
     Allow from env=REDIRECT_AllowIP
 EOF
+    if [[ -n "${allowUrl}" ]]; then
+      allowUrlList=( $(echo "${allowUrl}" | tr "," "\n") )
+      for nextAllowUrl in "${allowUrlList[@]}"; do
+        echo "Adding basic auth exception for url: ${nextAllowUrl}"
+        cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
+    SetEnvIf Request_URI ${nextAllowUrl} AllowUrl
+EOF
+      done
+    cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
+    Allow from env=AllowUrl
+    Allow from env=REDIRECT_AllowUrl
+EOF
+    fi
   fi
-
-    #SetEnvIf Request_URI ^/stripe/webhooks$ AllowUrl
-    #Allow from env=AllowUrl
-    #Allow from env=REDIRECT_AllowUrl
 
   cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
     Order Allow,Deny
@@ -437,32 +453,45 @@ EOF
       Require ip 80.153.113.235
       Require ip 2003:a:771:7a00::/64
 EOF
-      if [[ -n "${requireIp}" ]]; then
-        requireIpList=( $(echo "${requireIp}" | tr "," "\n") )
-        for nextRequireIp in "${requireIpList[@]}"; do
-          echo "Adding basic auth exception for remote IP: ${nextRequireIp}"
-          cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
+    if [[ -n "${requireIp}" ]]; then
+      requireIpList=( $(echo "${requireIp}" | tr "," "\n") )
+      for nextRequireIp in "${requireIpList[@]}"; do
+        echo "Adding basic auth exception for remote IP: ${nextRequireIp}"
+        cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
       Require ip ${nextRequireIp}
 EOF
-        done
-      fi
-      cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
+      done
+    fi
+    cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
       SetEnvIF X-Forwarded-For "80.153.113.235" AllowIP
       SetEnvIF X-Forwarded-For "2003:a:771:7a00:.*" AllowIP
 EOF
-      if [[ -n "${requireIp}" ]]; then
-        requireIpList=( $(echo "${requireIp}" | tr "," "\n") )
-        for nextRequireIp in "${requireIpList[@]}"; do
-          echo "Adding basic auth exception for forwarded IP: ${nextRequireIp}"
-          cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
+    if [[ -n "${requireIp}" ]]; then
+      requireIpList=( $(echo "${requireIp}" | tr "," "\n") )
+      for nextRequireIp in "${requireIpList[@]}"; do
+        echo "Adding basic auth exception for forwarded IP: ${nextRequireIp}"
+        cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
       SetEnvIF X-Forwarded-For "${nextRequireIp}" AllowIP
 EOF
-        done
-      fi
-      cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
+      done
+    fi
+    cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
       Allow from env=AllowIP
       Allow from env=REDIRECT_AllowIP
 EOF
+    if [[ -n "${allowUrl}" ]]; then
+      allowUrlList=( $(echo "${allowUrl}" | tr "," "\n") )
+      for nextAllowUrl in "${allowUrlList[@]}"; do
+        echo "Adding basic auth exception for url: ${nextAllowUrl}"
+        cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
+      SetEnvIf Request_URI ${nextAllowUrl} AllowUrl
+EOF
+      done
+      cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
+      Allow from env=AllowUrl
+      Allow from env=REDIRECT_AllowUrl
+EOF
+    fi
   fi
 
       #SetEnvIf Request_URI ^/stripe/webhooks$ AllowUrl

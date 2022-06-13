@@ -33,7 +33,7 @@ hostName=
 basicAuthUserName=
 basicAuthPassword=
 
-while getopts hw:u:g:t:v:p:z:x:y:n:o:a:e:c:l:k:r:f:i:b:s:? option; do
+while getopts hw:u:g:t:v:p:z:x:y:n:o:a:e:c:l:k:r:f:i:j:b:s:? option; do
   case "${option}" in
     h) usage; exit 1;;
     w) webPath=$(trim "$OPTARG");;
@@ -55,6 +55,7 @@ while getopts hw:u:g:t:v:p:z:x:y:n:o:a:e:c:l:k:r:f:i:b:s:? option; do
     r) ;;
     f) ;;
     i) ;;
+    j) ;;
     b) basicAuthUserName=$(trim "$OPTARG");;
     s) basicAuthPassword=$(trim "$OPTARG");;
     ?) usage; exit 1;;
@@ -86,9 +87,9 @@ currentUser="$(whoami)"
 currentGroup="$(id -g -n)"
 
 if [[ -n "${basicAuthUserName}" ]] && [[ "${basicAuthUserName}" != "-" ]]; then
-  echo "Adding basic user in file at: ${webRoot}/.htpasswd"
+  echo "Adding basic user in file at: ${webRoot}/${hostName}.htpasswd"
   if [[ "${webUser}" != "${currentUser}" ]] || [[ "${webGroup}" != "${currentGroup}" ]]; then
-    if [[ -f "${webRoot}/.htpasswd" ]]; then
+    if [[ -f "${webRoot}/${hostName}.htpasswd" ]]; then
       result=$(sudo -H -u "${webUser}" bash -c "htpasswd -b \"${webRoot}/${hostName}.htpasswd\" \"${basicAuthUserName}\" \"${basicAuthPassword}\"" 2>/dev/null && echo "1" || echo "0")
       if [[ "${result}" -eq 0 ]]; then
         sudo -H -u "${webUser}" bash -c "sudo htpasswd -b \"${webRoot}/${hostName}.htpasswd\" \"${basicAuthUserName}\" \"${basicAuthPassword}\""
@@ -100,7 +101,7 @@ if [[ -n "${basicAuthUserName}" ]] && [[ "${basicAuthUserName}" != "-" ]]; then
       fi
     fi
   else
-    if [[ -f "${webRoot}/.htpasswd" ]]; then
+    if [[ -f "${webRoot}/${hostName}.htpasswd" ]]; then
       result=$(htpasswd -b "${webRoot}/${hostName}.htpasswd" "${basicAuthUserName}" "${basicAuthPassword}" 2>/dev/null && echo "1" || echo "0")
       if [[ "${result}" -eq 0 ]]; then
         sudo htpasswd -b "${webRoot}/${hostName}.htpasswd" "${basicAuthUserName}" "${basicAuthPassword}"
