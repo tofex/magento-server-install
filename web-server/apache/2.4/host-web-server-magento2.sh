@@ -224,8 +224,9 @@ EOF
     serverAliasList=( $(echo "${serverAlias}" | tr "," "\n") )
     for nextServerAlias in "${serverAliasList[@]}"; do
       echo "Adding HTTP server alias: ${nextServerAlias}"
+      nextServerAliasList=( $(echo "${nextServerAlias}" | tr ":" "\n") )
       cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
-  ServerAlias ${nextServerAlias}
+  ServerAlias ${nextServerAliasList[0]}
 EOF
     done
   fi
@@ -243,8 +244,10 @@ EOF
   if [[ -n "${serverAlias}" ]]; then
     serverAliasList=( $(echo "${serverAlias}" | tr "," "\n") )
     for nextServerAlias in "${serverAliasList[@]}"; do
+      echo "Adding HTTP server alias: ${nextServerAlias}"
+      nextServerAliasList=( $(echo "${nextServerAlias}" | tr ":" "\n") )
       cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
-  ServerAlias ${nextServerAlias}
+  ServerAlias ${nextServerAliasList[0]}
 EOF
     done
   fi
@@ -303,6 +306,19 @@ EOF
     Allow from env=REDIRECT_AllowUrl
 EOF
     fi
+  fi
+
+  if [[ -n "${serverAlias}" ]]; then
+    serverAliasList=( $(echo "${serverAlias}" | tr "," "\n") )
+    for nextServerAlias in "${serverAliasList[@]}"; do
+      nextServerAliasList=( $(echo "${nextServerAlias}" | tr ":" "\n") )
+      if [[ "${nextServerAliasList[1]}" == "fake" ]]; then
+        echo "Adding SSL server alias fake: ${nextServerAlias}"
+        cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
+    SetEnvIF HOST "${nextServerAliasList[0]}" X-Main-Host="${serverName}"
+EOF
+      fi
+    done
   fi
 
   cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
@@ -432,8 +448,9 @@ EOF
     serverAliasList=( $(echo "${serverAlias}" | tr "," "\n") )
     for nextServerAlias in "${serverAliasList[@]}"; do
       echo "Adding SSL server alias: ${nextServerAlias}"
+      nextServerAliasList=( $(echo "${nextServerAlias}" | tr ":" "\n") )
       cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
-    ServerAlias ${nextServerAlias}
+    ServerAlias ${nextServerAliasList[0]}
 EOF
     done
   fi
@@ -494,9 +511,18 @@ EOF
     fi
   fi
 
-      #SetEnvIf Request_URI ^/stripe/webhooks$ AllowUrl
-      #Allow from env=AllowUrl
-      #Allow from env=REDIRECT_AllowUrl
+  if [[ -n "${serverAlias}" ]]; then
+    serverAliasList=( $(echo "${serverAlias}" | tr "," "\n") )
+    for nextServerAlias in "${serverAliasList[@]}"; do
+      nextServerAliasList=( $(echo "${nextServerAlias}" | tr ":" "\n") )
+      if [[ "${nextServerAliasList[1]}" == "fake" ]]; then
+        echo "Adding SSL server alias fake: ${nextServerAlias}"
+        cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
+      SetEnvIF HOST "${nextServerAliasList[0]}" X-Main-Host="${serverName}"
+EOF
+      fi
+    done
+  fi
 
   echo "Setting Magento entry with mode: ${magentoMode}, scope: ${scope} and code: ${code}"
   cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
