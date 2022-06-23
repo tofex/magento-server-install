@@ -516,7 +516,11 @@ fi
 echo "Enabling configuration at: /etc/apache2/sites-enabled/${hostName}.conf"
 test ! -f "/etc/apache2/sites-enabled/${hostName}.conf" && sudo a2ensite "${hostName}.conf"
 
-if [[ ! -f /.dockerenv ]]; then
+if [[ -f /.dockerenv ]]; then
+  echo "Reloading Apache"
+  sudo service apache2 reload
+  sleep 5
+else
   echo "Restarting Apache"
   sudo service apache2 restart
   sleep 5
