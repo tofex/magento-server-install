@@ -113,6 +113,11 @@ else
     echo "Upgrading to composer: 2.3.5"
     curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer --version 2.3.5
   fi
+  composer config --global --no-plugins allow-plugins.laminas/laminas-dependency-plugin true
+  composer config --global --no-plugins allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
+  composer config --global --no-plugins allow-plugins.magento/composer-root-update-plugin true
+  composer config --global --no-plugins allow-plugins.magento/inventory-composer-installer true
+  composer config --global --no-plugins allow-plugins.magento/magento-composer-installer true
 fi
 
 if [[ "${overwrite}" == 1 ]]; then
