@@ -53,7 +53,7 @@ if [[ -z "${innodbBufferPoolSize}" ]]; then
   innodbBufferPoolSize="4"
 fi
 
-"${currentPath}/../core/script/run.sh" "database:all" "${currentPath}/database/[databaseServerType]/[databaseVersion]/database.sh" \
+"${currentPath}/../core/script/run.sh" "database:all" "${currentPath}/database/[databaseType]/[databaseVersion]/database.sh" \
   --bindAddress "${bindAddress}" \
   --serverId "${serverId}" \
   --connections "${connections}" \
