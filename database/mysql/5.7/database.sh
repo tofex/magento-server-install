@@ -10,14 +10,14 @@ cat >&2 << EOF
 usage: ${scriptName} options
 
 OPTIONS:
-  --help            Show this message
-  --bindAddress     Bind address, default: 127.0.0.1
-  --databasePort    Port, default: 3306
-  --serverId        Server Id, default: 1
-  --connections     Connections, default: 100
-  --bufferPoolSize  InnoDB buffer pool size in GB, default: 4
+  --help                  Show this message
+  --bindAddress           Bind address, default: 127.0.0.1
+  --databasePort          Port, default: 3306
+  --serverId              Server Id, default: 1
+  --connections           Connections, default: 100
+  --innodbBufferPoolSize  InnoDB buffer pool size in GB, default: 4
 
-Example: ${scriptName} --bindAddress 0.0.0.0 --databasePort 3306 --serverId 1 --connections 100 --bufferPoolSize 4
+Example: ${scriptName} --bindAddress 0.0.0.0 --databasePort 3306 --serverId 1 --connections 100 --innodbBufferPoolSize 4
 EOF
 }
 
