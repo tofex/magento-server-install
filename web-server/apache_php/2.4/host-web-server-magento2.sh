@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+currentPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 scriptName="${0##*/}"
 
 usage()
@@ -9,37 +11,32 @@ cat >&2 << EOF
 usage: ${scriptName} options
 
 OPTIONS:
-  -h  Show this message
-  -w  Web path
-  -u  Web user, default: www-data
-  -g  Web group, default: www-data
-  -p  Apache HTTP port, default: 80
-  -z  Apache SSL port, default: 443
-  -x  Proxy host
-  -y  Proxy port
-  -n  Host name
-  -o  Server name
-  -a  Server Alias List, separated by comma
-  -e  Magento run scope, default: default
-  -c  Magento run code, default: default
-  -l  SSL certificate file, default: /etc/ssl/certs/ssl-cert-snakeoil.pem
-  -k  SSL key file, default: /etc/ssl/private/ssl-cert-snakeoil.key
-  -r  SSL terminated (yes/no), default: no
-  -f  Force SSL (yes/no), default: yes
-  -i  Allow IPs without basic auth, separated by comma
-  -j  Allow Url without basic auth, separated by comma
-  -b  Basic auth user name
-  -m  Magento version
-  -d  Magento mode (production or developer), default: production
-  -q  Overwrite existing files (optional), default: no
+  --help               Show this message
+  --webPath            Web path
+  --webUser            Web user, default: www-data
+  --webGroup           Web group, default: www-data
+  --httpPort           Apache HTTP port, default: 80
+  --sslPort            Apache SSL port, default: 443
+  --proxyHost          Proxy host
+  --proxyPort          Proxy port
+  --hostName           Host name
+  --hostServerName     Server name
+  --serverAlias        Server Alias List, separated by comma
+  --scope              Magento run scope, default: default
+  --code               Magento run code, default: default
+  --sslCertFile        SSL certificate file, default: /etc/ssl/certs/ssl-cert-snakeoil.pem
+  --sslKeyFile         SSL key file, default: /etc/ssl/private/ssl-cert-snakeoil.key
+  --sslTerminated      SSL terminated (yes/no), default: no
+  --forceSsl           Force SSL (yes/no), default: yes
+  --requireIp          Allow IPs without basic auth, separated by comma
+  --allowUrl           Allow Url without basic auth, separated by comma
+  --basicAuthUserName  Basic auth user name
+  --magentoVersion     Magento version
+  --magentoMode        Magento mode (production or developer), default: production
+  --overwrite          Overwrite existing files (optional), default: no
 
-Example: ${scriptName} -w /var/www/magento/htdocs -n dev_magento2_de -o dev.magento2.de -m 2.3.7
+Example: ${scriptName} --webPath /var/www/magento/htdocs --hostName dev_magento2_de --hostServerName dev.magento2.de
 EOF
-}
-
-trim()
-{
-  echo -n "$1" | xargs
 }
 
 versionCompare() {
@@ -60,7 +57,7 @@ sslPort=
 proxyHost=
 proxyPort=
 hostName=
-serverName=
+hostServerName=
 serverAlias=
 scope=
 code=
@@ -71,40 +68,15 @@ forceSsl=
 requireIp=
 allowUrl=
 basicAuthUserName=
+magentoVersion=
 magentoMode=
 overwrite=
 
-while getopts hw:u:g:t:v:p:z:x:y:n:o:a:e:c:l:k:r:f:i:j:b:s:m:d:q:? option; do
-  case "${option}" in
-    h) usage; exit 1;;
-    w) webPath=$(trim "$OPTARG");;
-    u) webUser=$(trim "$OPTARG");;
-    g) webGroup=$(trim "$OPTARG");;
-    t) ;;
-    v) ;;
-    p) httpPort=$(trim "$OPTARG");;
-    z) sslPort=$(trim "$OPTARG");;
-    x) proxyHost=$(trim "$OPTARG");;
-    y) proxyPort=$(trim "$OPTARG");;
-    n) hostName=$(trim "$OPTARG");;
-    o) serverName=$(trim "$OPTARG");;
-    a) serverAlias=$(trim "$OPTARG");;
-    e) scope=$(trim "$OPTARG");;
-    c) code=$(trim "$OPTARG");;
-    l) sslCertFile=$(trim "$OPTARG");;
-    k) sslKeyFile=$(trim "$OPTARG");;
-    r) sslTerminated=$(trim "$OPTARG");;
-    f) forceSsl=$(trim "$OPTARG");;
-    i) requireIp=$(trim "$OPTARG");;
-    j) allowUrl=$(trim "$OPTARG");;
-    b) basicAuthUserName=$(trim "$OPTARG");;
-    s) ;;
-    m) magentoVersion=$(trim "$OPTARG");;
-    d) magentoMode=$(trim "$OPTARG");;
-    q) overwrite=$(trim "$OPTARG");;
-    ?) usage; exit 1;;
-  esac
-done
+if [[ -f "${currentPath}/../../core/prepare-parameters.sh" ]]; then
+  source "${currentPath}/../../core/prepare-parameters.sh"
+elif [[ -f /tmp/prepare-parameters.sh ]]; then
+  source /tmp/prepare-parameters.sh
+fi
 
 if [[ -z "${webPath}" ]]; then
   echo "No web path specified!"
@@ -142,8 +114,8 @@ if [[ -z "${hostName}" ]]; then
   exit 1
 fi
 
-if [[ -z "${serverName}" ]]; then
-  echo "No server name specified!"
+if [[ -z "${hostServerName}" ]]; then
+  echo "No host server name specified!"
   usage
   exit 1
 fi
@@ -215,10 +187,10 @@ fi
 echo "Creating configuration at: /etc/apache2/sites-available/${hostName}.conf"
 
 if [[ "${forceSsl}" == "yes" ]] && [[ "${sslTerminated}" == "no" ]]; then
-  echo "Adding HTTP configuration for port: ${httpPort} and server name: ${serverName}"
+  echo "Adding HTTP configuration for port: ${httpPort} and server name: ${hostServerName}"
   cat <<EOF | sudo tee "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
 <VirtualHost *:${httpPort}>
-  ServerName ${serverName}
+  ServerName ${hostServerName}
 EOF
   if [[ -n "${serverAlias}" ]]; then
     serverAliasList=( $(echo "${serverAlias}" | tr "," "\n") )
@@ -233,13 +205,13 @@ EOF
   cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
   ServerAdmin webmaster@localhost
   DocumentRoot ${documentRoot}/
-  Redirect / https://${serverName}/
+  Redirect / https://${hostServerName}/
 </VirtualHost>
 EOF
 else
   cat <<EOF | sudo tee "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
 <VirtualHost *:${httpPort}>
-  ServerName ${serverName}
+  ServerName ${hostServerName}
 EOF
   if [[ -n "${serverAlias}" ]]; then
     serverAliasList=( $(echo "${serverAlias}" | tr "," "\n") )
@@ -315,7 +287,7 @@ EOF
       if [[ "${nextServerAliasList[1]}" == "fake" ]]; then
         echo "Adding SSL server alias fake: ${nextServerAlias}"
         cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
-    SetEnvIF HOST "${nextServerAliasList[0]}" X-Main-Host="${serverName}"
+    SetEnvIF HOST "${nextServerAliasList[0]}" X-Main-Host="${hostServerName}"
 EOF
       fi
     done
@@ -435,14 +407,14 @@ if [[ "${sslTerminated}" == "no" ]]; then
 </IfModule>
 EOF
 
-  echo "Adding SSL configuration with port: ${sslPort} and server name: ${serverName}"
+  echo "Adding SSL configuration with port: ${sslPort} and server name: ${hostServerName}"
   cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
 <IfModule mod_ssl.c>
   <VirtualHost *:${sslPort}>
     SSLEngine on
     SSLCertificateFile ${sslCertFile}
     SSLCertificateKeyFile ${sslKeyFile}
-    ServerName ${serverName}
+    ServerName ${hostServerName}
 EOF
   if [[ -n "${serverAlias}" ]]; then
     serverAliasList=( $(echo "${serverAlias}" | tr "," "\n") )
@@ -518,7 +490,7 @@ EOF
       if [[ "${nextServerAliasList[1]}" == "fake" ]]; then
         echo "Adding SSL server alias fake: ${nextServerAlias}"
         cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
-      SetEnvIF HOST "${nextServerAliasList[0]}" X-Main-Host="${serverName}"
+      SetEnvIF HOST "${nextServerAliasList[0]}" X-Main-Host="${hostServerName}"
 EOF
       fi
     done

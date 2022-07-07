@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+currentPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 scriptName="${0##*/}"
 
 usage()
@@ -9,21 +11,16 @@ cat >&2 << EOF
 usage: ${scriptName} options
 
 OPTIONS:
-  -h  Show this message
-  -w  Web path
-  -u  Web user, default: www-data
-  -g  Web group, default: www-data
-  -n  Host name
-  -b  Basic auth user name
-  -s  Basic auth password
+  --help               Show this message
+  --webPath            Web path
+  --webUser            Web user, default: www-data
+  --webGroup           Web group, default: www-data
+  --hostName           Host name
+  --basicAuthUserName  Basic auth user name
+  --basicAuthPassword  Basic auth password
 
-Example: ${scriptName} -w /var/www/magento/htdocs -n dev_magento2_de -b letme -s in
+Example: ${scriptName} --webPath /var/www/magento/htdocs --hostName dev_magento2_de --basicAuthUserName letme --basicAuthPassword in
 EOF
-}
-
-trim()
-{
-  echo -n "$1" | xargs
 }
 
 webPath=
@@ -33,34 +30,11 @@ hostName=
 basicAuthUserName=
 basicAuthPassword=
 
-while getopts hw:u:g:t:v:p:z:x:y:n:o:a:e:c:l:k:r:f:i:j:b:s:? option; do
-  case "${option}" in
-    h) usage; exit 1;;
-    w) webPath=$(trim "$OPTARG");;
-    u) webUser=$(trim "$OPTARG");;
-    g) webGroup=$(trim "$OPTARG");;
-    t) ;;
-    v) ;;
-    p) ;;
-    z) ;;
-    x) ;;
-    y) ;;
-    n) hostName=$(trim "$OPTARG");;
-    o) ;;
-    a) ;;
-    e) ;;
-    c) ;;
-    l) ;;
-    k) ;;
-    r) ;;
-    f) ;;
-    i) ;;
-    j) ;;
-    b) basicAuthUserName=$(trim "$OPTARG");;
-    s) basicAuthPassword=$(trim "$OPTARG");;
-    ?) usage; exit 1;;
-  esac
-done
+if [[ -f "${currentPath}/../../core/prepare-parameters.sh" ]]; then
+  source "${currentPath}/../../core/prepare-parameters.sh"
+elif [[ -f /tmp/prepare-parameters.sh ]]; then
+  source /tmp/prepare-parameters.sh
+fi
 
 if [[ -z "${webPath}" ]]; then
   echo "No web path specified!"

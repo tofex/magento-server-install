@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+currentPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 scriptName="${0##*/}"
 
 usage()
@@ -9,40 +11,24 @@ cat >&2 << EOF
 usage: ${scriptName} options
 
 OPTIONS:
-  -h  Show this message
-  -w  Web path
-  -u  Web user, default: www-data
-  -g  Web group, default: www-data
+  --help      Show this message
+  --webPath   Web path
+  --webUser   Web user, default: www-data
+  --webGroup  Web group, default: www-data
 
-Example: ${scriptName} -w /var/www/magento/htdocs
+Example: ${scriptName} --webPath /var/www/magento/htdocs
 EOF
-}
-
-trim()
-{
-  echo -n "$1" | xargs
 }
 
 webPath=
 webUser=
 webGroup=
 
-while getopts hn:w:u:g:t:v:p:z:x:y:? option; do
-  case "${option}" in
-    h) usage; exit 1;;
-    n) ;;
-    w) webPath=$(trim "$OPTARG");;
-    u) webUser=$(trim "$OPTARG");;
-    g) webGroup=$(trim "$OPTARG");;
-    t) ;;
-    v) ;;
-    p) ;;
-    z) ;;
-    x) ;;
-    y) ;;
-    ?) usage; exit 1;;
-  esac
-done
+if [[ -f "${currentPath}/../../core/prepare-parameters.sh" ]]; then
+  source "${currentPath}/../../core/prepare-parameters.sh"
+elif [[ -f /tmp/prepare-parameters.sh ]]; then
+  source /tmp/prepare-parameters.sh
+fi
 
 if [[ -z "${webPath}" ]]; then
   echo "No web path specified!"
