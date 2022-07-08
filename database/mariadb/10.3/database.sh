@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+currentPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 scriptName="${0##*/}"
 
 usage()
@@ -8,20 +10,15 @@ cat >&2 << EOF
 usage: ${scriptName} options
 
 OPTIONS:
-  -h  Show this message
-  -b  Bind address, default: 127.0.0.1
-  -p  Port, default: 3306
-  -i  Server Id, default: 1
-  -c  Connections, default: 100
-  -s  InnoDB buffer pool size in GB, default: 4
+  --help                  Show this message
+  --bindAddress           Bind address, default: 127.0.0.1
+  --databasePort          Port, default: 3306
+  --serverId              Server Id, default: 1
+  --connections           Connections, default: 100
+  --innodbBufferPoolSize  InnoDB buffer pool size in GB, default: 4
 
-Example: ${scriptName} -b 0.0.0.0 -p 3306 -i 1 -c 100 -s 4
+Example: ${scriptName} --bindAddress 0.0.0.0 --databasePort 3306 --serverId 1 --connections 100 --innodbBufferPoolSize 4
 EOF
-}
-
-trim()
-{
-  echo -n "$1" | xargs
 }
 
 bindAddress=
@@ -30,28 +27,22 @@ serverId=
 connections=
 innodbBufferPoolSize=
 
-while getopts hb:p:i:c:s:? option; do
-  case "${option}" in
-    h) usage; exit 1;;
-    b) bindAddress=$(trim "$OPTARG");;
-    p) databasePort=$(trim "$OPTARG");;
-    i) serverId=$(trim "$OPTARG");;
-    c) connections=$(trim "$OPTARG");;
-    s) innodbBufferPoolSize=$(trim "$OPTARG");;
-    ?) usage; exit 1;;
-  esac
-done
+if [[ -f "${currentPath}/../../core/prepare-parameters.sh" ]]; then
+  source "${currentPath}/../../core/prepare-parameters.sh"
+elif [[ -f /tmp/prepare-parameters.sh ]]; then
+  source /tmp/prepare-parameters.sh
+fi
 
-if [[ -z "${serverId}" ]]; then
-  serverId="1"
+if [[ -z "${bindAddress}" ]]; then
+  bindAddress="127.0.0.1"
 fi
 
 if [[ -z "${databasePort}" ]]; then
   databasePort="3306"
 fi
 
-if [[ -z "${bindAddress}" ]]; then
-  bindAddress="127.0.0.1"
+if [[ -z "${serverId}" ]]; then
+  serverId="1"
 fi
 
 if [[ -z "${connections}" ]]; then
@@ -81,8 +72,10 @@ if [[ "${remainingMemory}" -lt 0 ]]; then
   exit 1
 fi
 
-echo "Stopping MySQL"
-sudo service mysql stop 2>&1
+if [[ ! -f /.dockerenv ]]; then
+  echo "Stopping MySQL"
+  sudo service mysql stop 2>&1
+fi
 
 echo "Creating configuration at: /etc/mysql/mysql.conf.d/mysqld.cnf"
 cat <<EOF | sudo tee "/etc/mysql/my.cnf" > /dev/null
@@ -161,5 +154,7 @@ EOF
 echo "Removing binary logs at: /var/lib/mysql/"
 sudo find /var/lib/mysql/ -name ib_logfile* -exec sh -c "echo \"Removing file: {}\"; rm -rf {}" \;
 
-echo "Starting MySQL"
-sudo service mysql start 2>&1
+if [[ ! -f /.dockerenv ]]; then
+  echo "Starting MySQL"
+  sudo service mysql start 2>&1
+fi
