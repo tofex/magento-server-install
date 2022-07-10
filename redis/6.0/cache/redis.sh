@@ -24,11 +24,6 @@ Example: ${scriptName} --redisCachePort 6379 --maxMemory 2048 --save no --allowS
 EOF
 }
 
-trim()
-{
-  echo -n "$1" | xargs
-}
-
 redisCachePort=
 redisCachePassword=
 maxMemory=

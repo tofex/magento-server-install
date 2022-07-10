@@ -24,11 +24,6 @@ Example: ${scriptName} --redisFPCPort 6379 --maxMemory 512 --save no --allowSync
 EOF
 }
 
-trim()
-{
-  echo -n "$1" | xargs
-}
-
 redisFPCPort=
 redisFPCPassword=
 maxMemory=

@@ -24,11 +24,6 @@ Example: ${scriptName} --redisSessionPort 6379 --maxMemory 256 --save no --allow
 EOF
 }
 
-trim()
-{
-  echo -n "$1" | xargs
-}
-
 redisSessionPort=
 redisSessionPassword=
 maxMemory=
