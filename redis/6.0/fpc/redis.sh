@@ -33,8 +33,8 @@ syncAlias=
 psyncAlias=
 shutdownCommand=
 
-if [[ -f "${currentPath}/../../core/prepare-parameters.sh" ]]; then
-  source "${currentPath}/../../core/prepare-parameters.sh"
+if [[ -f "${currentPath}/../../../../core/prepare-parameters.sh" ]]; then
+  source "${currentPath}/../../../../core/prepare-parameters.sh"
 elif [[ -f /tmp/prepare-parameters.sh ]]; then
   source /tmp/prepare-parameters.sh
 fi
