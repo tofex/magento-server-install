@@ -210,7 +210,7 @@ EOF
     cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
     AuthType Basic
     AuthName "${hostName}"
-    AuthUserFile "${webRoot}/.htpasswd"
+    AuthUserFile "${webRoot}/${hostName}.htpasswd"
     Require valid-user
     Require ip 80.153.113.235
     Require ip 2003:a:771:7a00::/64
@@ -402,7 +402,7 @@ EOF
     cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
       AuthType Basic
       AuthName "${hostName}"
-      AuthUserFile "${webRoot}/.htpasswd"
+      AuthUserFile "${webRoot}/${hostName}.htpasswd"
       Require valid-user
       Require ip 80.153.113.235
       Require ip 2003:a:771:7a00::/64
