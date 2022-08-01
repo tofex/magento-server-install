@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+currentPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 scriptName="${0##*/}"
 
 usage()
@@ -9,15 +11,19 @@ cat >&2 << EOF
 usage: ${scriptName} options
 
 OPTIONS:
-  -h  Show this message
+  --help  Show this message
+  --magentoVersion    Magento version
+  --cryptKey          Crypt key
+  --databaseHost
+  --databasePort
+  --databaseUser
+  --databasePassword
+  --databaseName
+  --webPath
+  --mainHostName
 
 Example: ${scriptName}
 EOF
-}
-
-trim()
-{
-  echo -n "$1" | xargs
 }
 
 magentoVersion=
@@ -29,40 +35,12 @@ databasePassword=
 databaseName=
 webPath=
 mainHostName=
-shareScript=
-sharedPath=
 
-while getopts hm:e:d:r:c:o:p:u:s:b:t:v:n:w:k:g:l:i:j:z:x:y:a:f:q:? option; do
-  case "${option}" in
-    h) usage; exit 1;;
-    m) magentoVersion=$(trim "$OPTARG");;
-    e) ;;
-    d) ;;
-    r) ;;
-    c) cryptKey=$(trim "$OPTARG");;
-    o) databaseHost=$(trim "$OPTARG");;
-    p) databasePort=$(trim "$OPTARG");;
-    u) databaseUser=$(trim "$OPTARG");;
-    s) databasePassword=$(trim "$OPTARG");;
-    b) databaseName=$(trim "$OPTARG");;
-    t) ;;
-    v) ;;
-    n) ;;
-    w) webPath=$(trim "$OPTARG");;
-    k) ;;
-    g) ;;
-    l) ;;
-    i) ;;
-    j) ;;
-    z) ;;
-    x) ;;
-    y) ;;
-    a) mainHostName=$(trim "$OPTARG");;
-    f) shareScript=$(trim "$OPTARG");;
-    q) sharedPath=$(trim "$OPTARG");;
-    ?) usage; exit 1;;
-  esac
-done
+if [[ -f "${currentPath}/../../core/prepare-parameters.sh" ]]; then
+  source "${currentPath}/../../core/prepare-parameters.sh"
+elif [[ -f /tmp/prepare-parameters.sh ]]; then
+  source /tmp/prepare-parameters.sh
+fi
 
 if [[ -z "${magentoVersion}" ]]; then
   echo "No Magento version to install specified!"
@@ -102,16 +80,6 @@ if [[ -z "${mainHostName}" ]]; then
   exit 1
 fi
 
-if [[ -z "${shareScript}" ]]; then
-  echo "No share script to install data specified!"
-  usage
-  exit 1
-fi
-
-if [[ -z "${sharedPath}" ]]; then
-  sharedPath="static"
-fi
-
 cd "${webPath}"
 
 if [[ ${magentoVersion:0:1} == 1 ]]; then
@@ -124,12 +92,6 @@ if [[ ${magentoVersion:0:1} == 1 ]]; then
     --admin_lastname Owner --admin_firstname Store --admin_email "admin@tofex.com" \
     --admin_username admin --admin_password adminadminadmin123 \
     --encryption_key "${cryptKey}"
-
-  "${shareScript}" \
-    -w "${webPath}" \
-    -s "${sharedPath}" \
-    -f app/etc/local.xml \
-    -o
 else
   rm -rf app/etc/env.php
   bin/magento setup:install "--base-url=https://${mainHostName}/" "--base-url-secure=https://${mainHostName}/" \
@@ -140,16 +102,4 @@ else
     --language=de_DE --currency=EUR --timezone=Europe/Berlin \
     --key "${cryptKey}" \
     --session-save=files --use-rewrites=1
-
-  "${shareScript}" \
-    -w "${webPath}" \
-    -s "${sharedPath}" \
-    -f app/etc/env.php \
-    -o
-
-  "${shareScript}" \
-    -w "${webPath}" \
-    -s "${sharedPath}" \
-    -f app/etc/config.php \
-    -o
 fi

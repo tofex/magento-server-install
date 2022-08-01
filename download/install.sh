@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+currentPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 scriptName="${0##*/}"
 
 usage()
@@ -8,11 +10,11 @@ cat >&2 << EOF
 usage: ${scriptName} options
 
 OPTIONS:
-  -h  Show this message
-  -m  Magento version
-  -d  Magento mode
+  --help            Show this message
+  --magentoVersion  Magento version
+  --magentoMode     Magento mode
 
-Example: ${scriptName} -m 2.3.7 -d production
+Example: ${scriptName} --magentoVersion 2.3.7 --magentoMode production
 EOF
 }
 
@@ -24,17 +26,11 @@ trim()
 magentoVersion=
 magentoMode=
 
-while getopts hm:e:d:r:c:? option; do
-  case "${option}" in
-    h) usage; exit 1;;
-    m) magentoVersion=$(trim "$OPTARG");;
-    e) ;;
-    d) magentoMode=$(trim "$OPTARG");;
-    r) ;;
-    c) ;;
-    ?) usage; exit 1;;
-  esac
-done
+if [[ -f "${currentPath}/../../core/prepare-parameters.sh" ]]; then
+  source "${currentPath}/../../core/prepare-parameters.sh"
+elif [[ -f /tmp/prepare-parameters.sh ]]; then
+  source /tmp/prepare-parameters.sh
+fi
 
 if [[ -z "${magentoVersion}" ]]; then
   echo "No Magento version to download specified!"
@@ -45,8 +41,6 @@ if [[ -z "${magentoMode}" ]]; then
   echo "No Magento edition to download specified!"
   exit 1
 fi
-
-currentPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 if [[ ${magentoVersion:0:1} == 1 ]]; then
   "${currentPath}/../../ops/create-shared.sh" \
