@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+currentPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 scriptName="${0##*/}"
 
 usage()
@@ -8,61 +10,24 @@ cat >&2 << EOF
 usage: ${scriptName} options
 
 OPTIONS:
-  -h  Show this message
-  -m  Magento version
-  -e  Magento edition
-  -w  Web path
-  -s  Share script file name
-  -a  shared file path, default: shared
+  --help            Show this message
+  --magentoVersion  Magento version
+  --magentoEdition  Magento edition
+  --webPath         Web path
 
-Example: ${scriptName} -m 2.3.7 -e community -w /var/www/magento/htdocs -s /tmp/ops-create-shared-local.sh -a shared
+Example: ${scriptName} --magentoVersion 2.3.7 --magentoEdition community --webPath /var/www/magento/htdocs
 EOF
-}
-
-trim()
-{
-  echo -n "$1" | xargs
-}
-
-versionCompare() {
-  if [[ "$1" == "$2" ]]; then
-    echo "0"
-  elif [[ "$1" = $(echo -e "$1\n$2" | sort -V | head -n1) ]]; then
-    echo "1"
-  else
-    echo "2"
-  fi
 }
 
 magentoVersion=
 magentoEdition=
 webPath=
-shareScript=
-sharedPath=
 
-while getopts hm:e:d:r:c:n:w:u:g:t:v:p:z:x:y:s:a:? option; do
-  case "${option}" in
-    h) usage; exit 1;;
-    m) magentoVersion=$(trim "$OPTARG");;
-    e) magentoEdition=$(trim "$OPTARG");;
-    d) ;;
-    r) ;;
-    c) ;;
-    n) ;;
-    w) webPath=$(trim "$OPTARG");;
-    u) ;;
-    g) ;;
-    t) ;;
-    v) ;;
-    p) ;;
-    z) ;;
-    x) ;;
-    y) ;;
-    s) shareScript=$(trim "$OPTARG");;
-    a) sharedPath=$(trim "$OPTARG");;
-    ?) usage; exit 1;;
-  esac
-done
+if [[ -f "${currentPath}/../../core/prepare-parameters.sh" ]]; then
+  source "${currentPath}/../../core/prepare-parameters.sh"
+elif [[ -f /tmp/prepare-parameters.sh ]]; then
+  source /tmp/prepare-parameters.sh
+fi
 
 if [[ -z "${magentoVersion}" ]]; then
   echo "No Magento version to install demo data specified!"
@@ -77,15 +42,6 @@ fi
 if [[ -z "${webPath}" ]]; then
   echo "No web path to install demo data specified!"
   exit 1
-fi
-
-if [[ -z "${shareScript}" ]]; then
-  echo "No share script to install demo data specified!"
-  exit 1
-fi
-
-if [[ -z "${sharedPath}" ]]; then
-  sharedPath="static"
 fi
 
 tmpDir=$(mktemp -d -t XXXXXXXXXXXXXXXX)
@@ -122,12 +78,6 @@ if [[ ${magentoVersion:0:1} == 1 ]]; then
     cp -afR magento-sample-data-1.14.2.4/privatesales/* "${webPath}/privatesales/"
     cp -afR magento-sample-data-1.14.2.4/skin/* "${webPath}/skin/"
   fi
-
-  "${shareScript}" \
-    -w "${webPath}" \
-    -s "${sharedPath}" \
-    -f skin/frontend/rwd/default/images/media \
-    -o
 else
   magentoVersion=$(echo "${magentoVersion}" | sed 's/-p[0-9]*$//')
 
@@ -142,12 +92,6 @@ else
   echo "Copying sample data"
   cp -afR "magento2-sample-data-${magentoVersion}"/app/code/Magento/* "${webPath}/app/code/Magento/"
   cp -afR "magento2-sample-data-${magentoVersion}"/pub/media/* "${webPath}/pub/media/"
-
-  "${shareScript}" \
-    -w "${webPath}" \
-    -s "${sharedPath}" \
-    -f app/code/Magento \
-    -o
 fi
 
 echo "Deleting temp dir: ${tmpDir}"

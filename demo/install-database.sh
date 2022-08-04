@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+currentPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 scriptName="${0##*/}"
 
 usage()
@@ -8,33 +10,18 @@ cat >&2 << EOF
 usage: ${scriptName} options
 
 OPTIONS:
-  -h  Show this message
-  -m  Magento version
-  -e  Magento edition
-  -o  Database host, default: localhost
-  -p  Database port, default: 3306
-  -u  Name of the database user
-  -s  Password of the database user
-  -b  Name of the database to import into
-  -i  Import script file name
+  --help              Show this message
+  --magentoVersion    Magento version
+  --magentoEdition    Magento edition
+  --databaseHost      Database host, default: localhost
+  --databasePort      Database port, default: 3306
+  --databaseUser      Name of the database user
+  --databasePassword  Password of the database user
+  --databaseName      Name of the database to import into
+  --importScript      Import script file name
 
-Example: ${scriptName} -m 2.3.7 -e community -u magento2 -s magento2 -b magento2 -i /tmp/mysql-import.sh
+Example: ${scriptName} --magentoVersion 2.3.7 --magentoEdition community --databaseUser magento2 --databasePassword magento2 --databaseName magento2 --importScript /tmp/mysql-import.sh
 EOF
-}
-
-trim()
-{
-  echo -n "$1" | xargs
-}
-
-versionCompare() {
-  if [[ "$1" == "$2" ]]; then
-    echo "0"
-  elif [[ "$1" = $(echo -e "$1\n$2" | sort -V | head -n1) ]]; then
-    echo "1"
-  else
-    echo "2"
-  fi
 }
 
 magentoVersion=
@@ -46,25 +33,11 @@ databasePassword=
 databaseName=
 importScript=
 
-while getopts hm:e:d:r:c:o:p:u:s:b:t:v:i:? option; do
-  case "${option}" in
-    h) usage; exit 1;;
-    m) magentoVersion=$(trim "$OPTARG");;
-    e) magentoEdition=$(trim "$OPTARG");;
-    d) ;;
-    r) ;;
-    c) ;;
-    o) databaseHost=$(trim "$OPTARG");;
-    p) databasePort=$(trim "$OPTARG");;
-    u) databaseUser=$(trim "$OPTARG");;
-    s) databasePassword=$(trim "$OPTARG");;
-    b) databaseName=$(trim "$OPTARG");;
-    t) ;;
-    v) ;;
-    i) importScript=$(trim "$OPTARG");;
-    ?) usage; exit 1;;
-  esac
-done
+if [[ -f "${currentPath}/../../core/prepare-parameters.sh" ]]; then
+  source "${currentPath}/../../core/prepare-parameters.sh"
+elif [[ -f /tmp/prepare-parameters.sh ]]; then
+  source /tmp/prepare-parameters.sh
+fi
 
 if [[ -z "${magentoVersion}" ]]; then
   echo "No Magento version to install demo data specified!"

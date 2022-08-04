@@ -35,4 +35,4 @@ currentPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 "${currentPath}/../core/script/run.sh" "install,webServer:all" "${currentPath}/download/install-web-server.sh" \
   --overwrite "${overwrite}"
 
-"${currentPath}/../core/script/run.sh" "install" "${currentPath}/download/install.sh"
+"${currentPath}/../core/script/run.sh" "install:local" "${currentPath}/download/install.sh"

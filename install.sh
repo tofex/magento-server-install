@@ -11,4 +11,4 @@ fi
 "${currentPath}/../core/script/run.sh" "install,database,elasticsearch,webServer" "${currentPath}/install/install-database-web-server.sh" \
   --mainHostName "${mainHostName}"
 
-"${currentPath}/../core/script/run.sh" "install" "${currentPath}/install/install.sh"
+"${currentPath}/../core/script/run.sh" "install:local" "${currentPath}/install/install.sh"

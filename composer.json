@@ -1,6 +1,6 @@
 {
   "name": "tofex/magento-server-install",
-  "version": "1.0.48",
+  "version": "1.0.49",
   "type": "magento-server-component",
   "description": "Tofex Magento Server Installation",
   "license": "MIT",
