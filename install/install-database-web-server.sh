@@ -26,6 +26,16 @@ Example: ${scriptName}
 EOF
 }
 
+versionCompare() {
+  if [[ "$1" == "$2" ]]; then
+    echo "0"
+  elif [[ "$1" = $(echo -e "$1\n$2" | sort -V | head -n1) ]]; then
+    echo "1"
+  else
+    echo "2"
+  fi
+}
+
 magentoVersion=
 cryptKey=
 databaseHost=
@@ -34,6 +44,8 @@ databaseUser=
 databasePassword=
 databaseName=
 webPath=
+elasticsearchHost=
+elasticsearchPort=
 mainHostName=
 
 if [[ -f "${currentPath}/../../core/prepare-parameters.sh" ]]; then
@@ -94,12 +106,37 @@ if [[ ${magentoVersion:0:1} == 1 ]]; then
     --encryption_key "${cryptKey}"
 else
   rm -rf app/etc/env.php
-  bin/magento setup:install "--base-url=https://${mainHostName}/" "--base-url-secure=https://${mainHostName}/" \
-    "--db-host=${databaseHost}:${databasePort}" "--db-name=${databaseName}" "--db-user=${databaseUser}" "--db-password=${databasePassword}" \
-    --use-secure-admin=1 --backend-frontname=admin \
-    --admin-lastname=Owner --admin-firstname=Store --admin-email=admin@tofex.de \
-    --admin-user=admin --admin-password=adminadminadmin123 \
-    --language=de_DE --currency=EUR --timezone=Europe/Berlin \
-    --key "${cryptKey}" \
-    --session-save=files --use-rewrites=1
+  if [[ $(versionCompare "${magentoVersion}" "2.4.0") == 0 ]] || [[ $(versionCompare "${magentoVersion}" "2.4.0") == 2 ]]; then
+    if [[ -z "${elasticsearchHost}" ]]; then
+      echo "No Elasticsearch host to install specified!"
+      usage
+      exit 1
+    fi
+
+    if [[ -z "${elasticsearchPort}" ]]; then
+      echo "No Elasticsearch port to install specified!"
+      usage
+      exit 1
+    fi
+
+    bin/magento setup:install "--base-url=https://${mainHostName}/" "--base-url-secure=https://${mainHostName}/" \
+      "--db-host=${databaseHost}:${databasePort}" "--db-name=${databaseName}" "--db-user=${databaseUser}" "--db-password=${databasePassword}" \
+      --use-secure-admin=1 --backend-frontname=admin \
+      --admin-lastname=Owner --admin-firstname=Store --admin-email=admin@tofex.de \
+      --admin-user=admin --admin-password=adminadminadmin123 \
+      --language=de_DE --currency=EUR --timezone=Europe/Berlin \
+      --key "${cryptKey}" \
+      --session-save=files --use-rewrites=1 \
+      --elasticsearch-host "${elasticsearchHost}" \
+      --elasticsearch-port "${elasticsearchPort}"
+  else
+    bin/magento setup:install "--base-url=https://${mainHostName}/" "--base-url-secure=https://${mainHostName}/" \
+      "--db-host=${databaseHost}:${databasePort}" "--db-name=${databaseName}" "--db-user=${databaseUser}" "--db-password=${databasePassword}" \
+      --use-secure-admin=1 --backend-frontname=admin \
+      --admin-lastname=Owner --admin-firstname=Store --admin-email=admin@tofex.de \
+      --admin-user=admin --admin-password=adminadminadmin123 \
+      --language=de_DE --currency=EUR --timezone=Europe/Berlin \
+      --key "${cryptKey}" \
+      --session-save=files --use-rewrites=1
+  fi
 fi
