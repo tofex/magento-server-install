@@ -11,16 +11,16 @@ cat >&2 << EOF
 usage: ${scriptName} options
 
 OPTIONS:
-  --help  Show this message
+  --help              Show this message
   --magentoVersion    Magento version
   --cryptKey          Crypt key
-  --databaseHost
-  --databasePort
-  --databaseUser
-  --databasePassword
-  --databaseName
-  --webPath
-  --mainHostName
+  --databaseHost      Database host, default: localhost
+  --databasePort      Database port, default: 3306
+  --databaseUser      Database user
+  --databasePassword  Database password
+  --databaseName      Database name
+  --webPath           Web path
+  --mainHostName      Name of main host
 
 Example: ${scriptName}
 EOF
