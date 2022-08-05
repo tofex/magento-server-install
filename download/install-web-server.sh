@@ -93,11 +93,11 @@ else
     echo "Upgrading to composer: 2.3.5"
     curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer --version 2.3.5
   fi
-  composer config --global --no-plugins allow-plugins.laminas/laminas-dependency-plugin true
-  composer config --global --no-plugins allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
-  composer config --global --no-plugins allow-plugins.magento/composer-root-update-plugin true
-  composer config --global --no-plugins allow-plugins.magento/inventory-composer-installer true
-  composer config --global --no-plugins allow-plugins.magento/magento-composer-installer true
+  composer config --ansi --global --no-plugins allow-plugins.laminas/laminas-dependency-plugin true
+  composer config --ansi --global --no-plugins allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
+  composer config --ansi --global --no-plugins allow-plugins.magento/composer-root-update-plugin true
+  composer config --ansi --global --no-plugins allow-plugins.magento/inventory-composer-installer true
+  composer config --ansi --global --no-plugins allow-plugins.magento/magento-composer-installer true
 fi
 
 if [[ "${overwrite}" == 1 ]]; then
@@ -117,15 +117,15 @@ if [[ ${magentoVersion:0:1} == 1 ]]; then
     repositoryComposerPassword=$(echo "${repository}" | cut -d"|" -f4)
     repositoryHostName=$(echo "${repositoryUrl}" | awk -F[/:] '{print $4}')
     echo "Adding composer repository access to url: ${repositoryUrl}"
-    composer config --no-interaction -g "http-basic.${repositoryHostName}" "${repositoryComposerUser}" "${repositoryComposerPassword}"
+    composer config --ansi --no-interaction -g "http-basic.${repositoryHostName}" "${repositoryComposerUser}" "${repositoryComposerPassword}"
   done
   echo "Creating composer project"
   phpVersion=$(php -v | head -n 1 | cut -d " " -f 2 | cut -f1-2 -d".")
   if [[ "${phpVersion}" == "5.4" ]]; then
     jq ".repositories.tofex += {\"options\": {\"ssl\": {\"verify_peer\": false, \"allow_self_signed\": true}}}" ~/.composer/config.json | sponge ~/.composer/config.json
-    composer create-project "magento/project-${magentoEdition}-edition=${magentoVersion}-patch" --no-interaction --prefer-dist "${webPath}"
+    composer create-project "magento/project-${magentoEdition}-edition=${magentoVersion}-patch" --ansi --no-interaction --prefer-dist "${webPath}" 2>&1
   else
-    composer create-project --repository-url=https://composer.tofex.de/ "magento/project-${magentoEdition}-edition=${magentoVersion}-patch" --no-interaction --prefer-dist "${webPath}"
+    composer create-project --repository-url=https://composer.tofex.de/ "magento/project-${magentoEdition}-edition=${magentoVersion}-patch" --ansi --no-interaction --prefer-dist "${webPath}" 2>&1
   fi
   #find "${webPath}" -type d -exec chmod 700 {} \; && find "${webPath}" -type f -exec chmod 600 {} \;
   chmod o+w "${webPath}/var" "${webPath}/var/.htaccess" "${webPath}/app/etc"
@@ -138,10 +138,10 @@ else
     repositoryComposerPassword=$(echo "${repository}" | cut -d"|" -f4)
     repositoryHostName=$(echo "${repositoryUrl}" | awk -F[/:] '{print $4}')
     echo "Adding composer repository access to url: ${repositoryUrl}"
-    composer config --no-interaction -g "http-basic.${repositoryHostName}" "${repositoryComposerUser}" "${repositoryComposerPassword}"
+    composer config --ansi --no-interaction -g "http-basic.${repositoryHostName}" "${repositoryComposerUser}" "${repositoryComposerPassword}"
   done
   echo "Creating composer project"
-  composer create-project --repository-url=https://repo.magento.com/ "magento/project-${magentoEdition}-edition=${magentoVersion}" --no-interaction --prefer-dist "${webPath}"
+  composer create-project --ansi --repository-url=https://repo.magento.com/ "magento/project-${magentoEdition}-edition=${magentoVersion}" --no-interaction --prefer-dist "${webPath}" 2>&1
   #find "${webPath}" -type d -exec chmod 700 {} \; && find "${webPath}" -type f -exec chmod 600 {} \;
   chmod o+w "${webPath}/var" "${webPath}/var/.htaccess" "${webPath}/app/etc"
   chmod 755 "${webPath}/bin/magento"
