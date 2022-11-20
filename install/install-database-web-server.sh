@@ -1,7 +1,6 @@
 #!/bin/bash -e
 
 currentPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
 scriptName="${0##*/}"
 
 usage()
@@ -14,6 +13,7 @@ OPTIONS:
   --help               Show this message
   --magentoVersion     Magento version
   --cryptKey           Crypt key
+  --adminPath          Path of administration, default: admin
   --databaseHost       Database host, default: localhost
   --databasePort       Database port, default: 3306
   --databaseUser       Database user
@@ -23,6 +23,14 @@ OPTIONS:
   --elasticsearchHost  Elasticsearch host
   --elasticsearchPort  Elasticsearch port
   --mainHostName       Name of main host
+  --adminUser          User name of store admin, default: admin
+  --adminPassword      Password of store admin, default: adminPassword12345
+  --adminFirstName     First name of store admin, default: Store
+  --adminLastName      Last name of store admin, default: Owner
+  --adminEmail         E-Mail address of store admin, default: admin@tofex.com
+  --defaultLocale      Language of store, default: de_DE
+  --defaultCurrency    Currency of store, default: EUR
+  --defaultTimezone    Timezone of store, default: Europe/Berlin
 
 Example: ${scriptName}
 EOF
@@ -40,6 +48,7 @@ versionCompare() {
 
 magentoVersion=
 cryptKey=
+adminPath=
 databaseHost=
 databasePort=
 databaseUser=
@@ -49,6 +58,14 @@ webPath=
 elasticsearchHost=
 elasticsearchPort=
 mainHostName=
+adminUser=
+adminPassword=
+adminFirstName=
+adminLastName=
+adminEmail=
+defaultLocale=
+defaultCurrency=
+defaultTimezone=
 
 if [[ -f "${currentPath}/../../core/prepare-parameters.sh" ]]; then
   source "${currentPath}/../../core/prepare-parameters.sh"
@@ -60,6 +77,16 @@ if [[ -z "${magentoVersion}" ]]; then
   echo "No Magento version to install specified!"
   usage
   exit 1
+fi
+
+if [[ -z "${cryptKey}" ]]; then
+  echo "No crypt key to install specified!"
+  usage
+  exit 1
+fi
+
+if [[ -z "${adminPath}" ]]; then
+  adminPath="admin"
 fi
 
 if [[ -z "${databaseHost}" ]]; then
@@ -94,17 +121,49 @@ if [[ -z "${mainHostName}" ]]; then
   exit 1
 fi
 
+if [[ -z "${adminUser}" ]]; then
+  adminUser="admin"
+fi
+
+if [[ -z "${adminPassword}" ]]; then
+  adminPassword="adminadminadmin123"
+fi
+
+if [[ -z "${adminFirstName}" ]]; then
+  adminFirstName="Store"
+fi
+
+if [[ -z "${adminLastName}" ]]; then
+  adminLastName="Owner"
+fi
+
+if [[ -z "${adminEmail}" ]]; then
+  adminEmail="admin@tofex.com"
+fi
+
+if [[ -z "${defaultLocale}" ]]; then
+  defaultLocale="de_DE"
+fi
+
+if [[ -z "${defaultCurrency}" ]]; then
+  defaultCurrency="EUR"
+fi
+
+if [[ -z "${defaultTimezone}" ]]; then
+  defaultTimezone="Europe/Berlin"
+fi
+
 cd "${webPath}"
 
 if [[ ${magentoVersion:0:1} == 1 ]]; then
   rm -rf app/etc/local.xml
   php -f install.php -- --license_agreement_accepted yes \
-    --locale de_DE --timezone "Europe/Berlin" --default_currency EUR \
     --db_host "${databaseHost}:${databasePort}" --db_name "${databaseName}" --db_user "${databaseUser}" --db_pass "${databasePassword}" \
     --url "https://${mainHostName}/" --skip_url_validation --use_rewrites yes \
     --use_secure yes --secure_base_url "https://${mainHostName}/" --use_secure_admin yes \
-    --admin_lastname Owner --admin_firstname Store --admin_email "admin@tofex.com" \
-    --admin_username admin --admin_password adminadminadmin123 \
+    --admin_username "${adminUser}" --admin_password "${adminPassword}" \
+    --admin_firstname "${adminFirstName}" --admin_lastname "${adminLastName}" --admin_email "${adminEmail}" \
+    --locale "${defaultLocale}" --default_currency "${defaultCurrency}" --timezone "${defaultTimezone}" \
     --encryption_key "${cryptKey}"
 else
   rm -rf app/etc/env.php
@@ -123,10 +182,10 @@ else
 
     bin/magento setup:install "--base-url=https://${mainHostName}/" "--base-url-secure=https://${mainHostName}/" \
       "--db-host=${databaseHost}:${databasePort}" "--db-name=${databaseName}" "--db-user=${databaseUser}" "--db-password=${databasePassword}" \
-      --use-secure-admin=1 --backend-frontname=admin \
-      --admin-lastname=Owner --admin-firstname=Store --admin-email=admin@tofex.de \
-      --admin-user=admin --admin-password=adminadminadmin123 \
-      --language=de_DE --currency=EUR --timezone=Europe/Berlin \
+      --use-secure-admin=1 --backend-frontname="${adminPath}" \
+      --admin-user="${adminUser}" --admin-password="${adminPassword}" \
+      --admin-firstname="${adminFirstName}" --admin-lastname="${adminLastName}" --admin-email="${adminEmail}" \
+      --language="${defaultLocale}" --currency="${defaultCurrency}" --timezone="${defaultTimezone}" \
       --key "${cryptKey}" \
       --session-save=files --use-rewrites=1 \
       --elasticsearch-host "${elasticsearchHost}" \
@@ -134,10 +193,10 @@ else
   else
     bin/magento setup:install "--base-url=https://${mainHostName}/" "--base-url-secure=https://${mainHostName}/" \
       "--db-host=${databaseHost}:${databasePort}" "--db-name=${databaseName}" "--db-user=${databaseUser}" "--db-password=${databasePassword}" \
-      --use-secure-admin=1 --backend-frontname=admin \
-      --admin-lastname=Owner --admin-firstname=Store --admin-email=admin@tofex.de \
-      --admin-user=admin --admin-password=adminadminadmin123 \
-      --language=de_DE --currency=EUR --timezone=Europe/Berlin \
+      --use-secure-admin=1 --backend-frontname="${adminPath}" \
+      --admin-user="${adminUser}" --admin-password="${adminPassword}" \
+      --admin-firstname="${adminFirstName}" --admin-lastname="${adminLastName}" --admin-email="${adminEmail}" \
+      --language="${defaultLocale}" --currency="${defaultCurrency}" --timezone="${defaultTimezone}" \
       --key "${cryptKey}" \
       --session-save=files --use-rewrites=1
   fi

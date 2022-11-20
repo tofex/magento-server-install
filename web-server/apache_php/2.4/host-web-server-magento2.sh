@@ -226,7 +226,7 @@ EOF
   cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
   ServerAdmin webmaster@localhost
   DocumentRoot ${documentRoot}/
-  <Directory ${webPath}/>
+  <Directory ${documentRoot}/>
 EOF
 
   if [[ -n "${basicAuthUserName}" ]] && [[ "${basicAuthUserName}" != "-" ]]; then
@@ -429,7 +429,7 @@ EOF
   cat <<EOF | sudo tee -a "/etc/apache2/sites-available/${hostName}.conf" > /dev/null
     ServerAdmin webmaster@localhost
     DocumentRoot ${documentRoot}/
-    <Directory ${webPath}/>
+    <Directory ${documentRoot}/>
 EOF
 
   if [[ -n "${basicAuthUserName}" ]] && [[ "${basicAuthUserName}" != "-" ]]; then
