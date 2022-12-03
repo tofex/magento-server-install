@@ -78,9 +78,9 @@ fi
 
 if [[ -z "${shutdownCommand}" ]]; then
   if [[ -n "${redisCachePassword}" ]]; then
-    shutdownCommand="\\\$CLIEXEC -p \\\$REDISPORT -a ${redisCachePassword} --no-auth-warning shutdown"
+    shutdownCommand="\$CLIEXEC -p \$REDISPORT -a ${redisCachePassword} --no-auth-warning shutdown"
   else
-    shutdownCommand="\\\$CLIEXEC -p \\\$REDISPORT shutdown"
+    shutdownCommand="\$CLIEXEC -p \$REDISPORT shutdown"
   fi
 fi
 
