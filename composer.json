@@ -1,20 +1,20 @@
 {
-  "name": "tofex/magento-server-install",
-  "version": "1.0.55",
-  "type": "magento-server-component",
-  "description": "Tofex Magento Server Installation",
-  "license": "MIT",
-  "authors": [
-    {
-      "name": "Andreas Knollmann",
-      "email": "a.knollmann@tofex.de",
-      "homepage": "https://www.tofex.de"
+    "name": "tofex/magento-server-install",
+    "version": "1.0.56",
+    "type": "magento-server-component",
+    "description": "Tofex Magento Server Installation",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Andreas Knollmann",
+            "email": "a.knollmann@tofex.de",
+            "homepage": "https://www.tofex.de"
+        }
+    ],
+    "require": {
+        "php": ">=7.0"
+    },
+    "extra": {
+        "installer-name": "install"
     }
-  ],
-  "require": {
-    "php": ">=7.0"
-  },
-  "extra": {
-    "installer-name": "install"
-  }
 }

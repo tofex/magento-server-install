@@ -24,7 +24,7 @@ trim()
   echo -n "$1" | xargs
 }
 
-bindAddress=""
+bindAddress=
 serverId="1"
 connections=
 innodbBufferPoolSize=

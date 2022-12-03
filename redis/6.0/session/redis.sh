@@ -1,7 +1,6 @@
 #!/bin/bash -e
 
 currentPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
 scriptName="${0##*/}"
 
 usage()
@@ -11,6 +10,7 @@ usage: ${scriptName} options
 
 OPTIONS:
   --help                  Show this message
+  --bindAddress           Bind address, default: 127.0.0.1
   --redisSessionPort      Redis session port
   --redisSessionPassword  Redis session password
   --maxMemory             Max memory to use in MB
@@ -20,10 +20,11 @@ OPTIONS:
   --psyncAlias            PSync alias (reqired if allow syncing = no)
   --shutdownCommand       Shutdown command (optional)
 
-Example: ${scriptName} --redisSessionPort 6379 --maxMemory 256 --save no --allowSync no --syncAlias 12345 --psyncAlias 98765 --shutdownCommand /usr/local/bin/redis_shutdown
+Example: ${scriptName} --bindAddress 0.0.0.0 --redisSessionPort 6379 --maxMemory 256 --save no --allowSync no --syncAlias 12345 --psyncAlias 98765 --shutdownCommand /usr/local/bin/redis_shutdown
 EOF
 }
 
+bindAddress=
 redisSessionPort=
 redisSessionPassword=
 maxMemory=
@@ -37,6 +38,10 @@ if [[ -f "${currentPath}/../../../../core/prepare-parameters.sh" ]]; then
   source "${currentPath}/../../../../core/prepare-parameters.sh"
 elif [[ -f /tmp/prepare-parameters.sh ]]; then
   source /tmp/prepare-parameters.sh
+fi
+
+if [[ -z "${bindAddress}" ]]; then
+  bindAddress="127.0.0.1"
 fi
 
 if [[ -z "${redisSessionPort}" ]]; then
@@ -97,7 +102,7 @@ appendfsync everysec
 appendonly no
 auto-aof-rewrite-min-size 64mb
 auto-aof-rewrite-percentage 100
-bind 0.0.0.0
+bind ${bindAddress}
 client-output-buffer-limit normal 0 0 0
 client-output-buffer-limit pubsub 32mb 8mb 60
 client-output-buffer-limit replica 256mb 64mb 60

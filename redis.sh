@@ -10,6 +10,7 @@ usage: ${scriptName} options
 
 OPTIONS:
   -h  Show this message
+  -b  Bind address, default: 127.0.0.1
   -t  Type of instance (cache, session, fpc)
   -m  Max memory in MB
   -s  Save the data on disk (yes/no), default: no
@@ -31,14 +32,16 @@ randomString()
   cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w "${1:-${length}}" | head -n 1
 }
 
+bindAddress=
 type=
 maxMemory=
 save=
 allowSync=
 
-while getopts ht:m:s:y:? option; do
+while getopts hb:t:m:s:y:? option; do
   case "${option}" in
     h) usage; exit 1;;
+    b) bindAddress=$(trim "$OPTARG");;
     t) type=$(trim "$OPTARG");;
     m) maxMemory=$(trim "$OPTARG");;
     s) save=$(trim "$OPTARG");;
@@ -46,6 +49,10 @@ while getopts ht:m:s:y:? option; do
     ?) usage; exit 1;;
   esac
 done
+
+if [[ -z "${bindAddress}" ]]; then
+  bindAddress="127.0.0.1"
+fi
 
 if [[ -z "${type}" ]]; then
   >&2 echo "No Redis type specified!"
@@ -77,6 +84,7 @@ fi
 
 if [[ "${type}" == "cache" ]]; then
   "${currentPath}/../core/script/run.sh" "redisCache:all" "${currentPath}/redis/[redisCacheVersion]/cache/redis.sh" \
+    --bindAddress "${bindAddress}" \
     --maxMemory "${maxMemory}" \
     --save "${save}" \
     --allowSync "${allowSync}" \
@@ -84,6 +92,7 @@ if [[ "${type}" == "cache" ]]; then
     --psyncAlias "${psyncAlias}"
 elif [[ "${type}" == "fpc" ]]; then
   "${currentPath}/../core/script/run.sh" "redisFPC:all" "${currentPath}/redis/[redisFPCVersion]/fpc/redis.sh" \
+    --bindAddress "${bindAddress}" \
     --maxMemory "${maxMemory}" \
     --save "${save}" \
     --allowSync "${allowSync}" \
@@ -91,6 +100,7 @@ elif [[ "${type}" == "fpc" ]]; then
     --psyncAlias "${psyncAlias}"
 elif [[ "${type}" == "session" ]]; then
   "${currentPath}/../core/script/run.sh" "redisSession:all" "${currentPath}/redis/[redisSessionVersion]/session/redis.sh" \
+    --bindAddress "${bindAddress}" \
     --maxMemory "${maxMemory}" \
     --save "${save}" \
     --allowSync "${allowSync}" \
