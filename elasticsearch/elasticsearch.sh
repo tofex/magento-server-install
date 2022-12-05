@@ -43,11 +43,19 @@ fi
 if [[ $(versionCompare "${elasticsearchVersion}" "7.0") == 0 ]] || [[ $(versionCompare "${elasticsearchVersion}" "7.0") == 2 ]]; then
   cd /usr/share/elasticsearch
 
-  echo "Installing Elasticsearch plugin: analysis-phonetic"
-  sudo bin/elasticsearch-plugin install analysis-phonetic
+  if [[ $(sudo bin/elasticsearch-plugin list | grep "analysis-phonetic" | wc -l) -eq 0 ]]; then
+    echo "Installing Elasticsearch plugin: analysis-phonetic"
+    sudo bin/elasticsearch-plugin install analysis-phonetic
+  else
+    echo "Elasticsearch plugin: analysis-phonetic already installed"
+  fi
 
-  echo "Installing Elasticsearch plugin: analysis-icu"
-  sudo bin/elasticsearch-plugin install analysis-icu
+  if [[ $(sudo bin/elasticsearch-plugin list | grep "analysis-icu" | wc -l) -eq 0 ]]; then
+    echo "Installing Elasticsearch plugin: analysis-icu"
+    sudo bin/elasticsearch-plugin install analysis-icu
+  else
+    echo "Elasticsearch plugin: analysis-icu already installed"
+  fi
 
   if [[ ! -f /.dockerenv ]]; then
     echo "Restarting Elasticsearch"
