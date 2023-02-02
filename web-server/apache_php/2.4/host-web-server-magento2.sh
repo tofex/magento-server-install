@@ -19,6 +19,7 @@ OPTIONS:
   --sslPort            Apache SSL port, default: 443
   --proxyHost          Proxy host
   --proxyPort          Proxy port
+  --documentRootIsPub  Flag if pub folder is root directory (yes/no), default: yes
   --hostName           Host name
   --hostServerName     Server name
   --serverAlias        Server Alias List, separated by comma
@@ -56,6 +57,7 @@ httpPort=
 sslPort=
 proxyHost=
 proxyPort=
+documentRootIsPub=
 hostName=
 hostServerName=
 serverAlias=
@@ -106,6 +108,10 @@ fi
 
 if [[ "${proxyPort}" == "-" ]]; then
   proxyPort=
+fi
+
+if [[ -z "${documentRootIsPub}" ]]; then
+  documentRootIsPub="yes"
 fi
 
 if [[ -z "${hostName}" ]]; then
@@ -179,7 +185,11 @@ else
 fi
 
 if [[ $(versionCompare "${magentoVersion}" "2.2.0") == 0 ]] || [[ $(versionCompare "${magentoVersion}" "2.2.0") == 2 ]]; then
-  documentRoot="${webPath}/pub"
+  if [[ "${documentRootIsPub}" == "yes" ]]; then
+    documentRoot="${webPath}/pub"
+  else
+    documentRoot="${webPath}"
+  fi
 else
   documentRoot="${webPath}"
 fi
