@@ -65,15 +65,24 @@ fi
 
 echo "Download Magento: ${magentoVersion}:${magentoEdition} to path: ${webPath}"
 
-if [[ $(versionCompare "${magentoVersion}" "2.4.2") == 0 ]] || [[ $(versionCompare "${magentoVersion}" "2.4.2") == 2 ]]; then
-  composerSupport=2
-elif [[ $(versionCompare "${magentoVersion}" "2.3.7") == 1 ]]; then
-  composerSupport=1
-elif [[ $(versionCompare "${magentoVersion}" "2.4.0") == 0 ]] || [[ $(versionCompare "${magentoVersion}" "2.4.0") == 2 ]]; then
-  composerSupport=1
+if [[ $(versionCompare "${magentoVersion}" "19.1.0") == 0 ]] || [[ $(versionCompare "${magentoVersion}" "19.1.0") == 2 ]]; then
+  if [[ $(versionCompare "${magentoVersion}" "20.0.0") == 1 ]]; then
+    composerSupport=1
+  else
+    composerSupport=2
+  fi
 else
-  composerSupport=2
+  if [[ $(versionCompare "${magentoVersion}" "2.4.2") == 0 ]] || [[ $(versionCompare "${magentoVersion}" "2.4.2") == 2 ]]; then
+    composerSupport=2
+  elif [[ $(versionCompare "${magentoVersion}" "2.3.7") == 1 ]]; then
+    composerSupport=1
+  elif [[ $(versionCompare "${magentoVersion}" "2.4.0") == 0 ]] || [[ $(versionCompare "${magentoVersion}" "2.4.0") == 2 ]]; then
+    composerSupport=1
+  else
+    composerSupport=2
+  fi
 fi
+
 echo "Composer support: ${composerSupport}"
 
 composerVersion=$(composer -V | awk '{print $3}')
@@ -111,7 +120,26 @@ echo "${repositories}"
 
 repositoryList=( $(echo "${repositories}" | tr "," "\n") )
 
-if [[ ${magentoVersion:0:1} == 1 ]]; then
+if [[ $(versionCompare "${magentoVersion}" "19.1.0") == 0 ]] || [[ $(versionCompare "${magentoVersion}" "19.1.0") == 2 ]]; then
+  echo "Creating composer project"
+  cd "${webPath}"
+  cat <<EOF | sudo tee composer.json > /dev/null
+{
+    "require": {
+        "aydin-hassan/magento-core-composer-installer": "*",
+        "openmage/magento-lts": "${magentoVersion}"
+    },
+    "extra": {
+        "magento-core-package-type": "magento-source",
+        "magento-root-dir": "."
+    }
+}
+EOF
+  composer install --ansi
+  chmod o+w "${webPath}/var" "${webPath}/var/.htaccess" "${webPath}/app/etc"
+  chmod 755 "${webPath}/mage"
+  chmod -R o+w "${webPath}/media"
+elif [[ ${magentoVersion:0:1} == 1 ]]; then
   for repository in "${repositoryList[@]}"; do
     repositoryUrl=$(echo "${repository}" | cut -d"|" -f2)
     repositoryComposerUser=$(echo "${repository}" | cut -d"|" -f3)
