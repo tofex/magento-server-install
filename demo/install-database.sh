@@ -135,12 +135,12 @@ elif [[ $(versionCompare "${magentoVersion}" "19.1.0") == 0 ]] || [[ $(versionCo
 
   echo "Importing sample data"
   "${importScript}" \
-    -o "${databaseHost}" \
-    -p "${databasePort}" \
-    -u "${databaseUser}" \
-    -s "${databasePassword}" \
-    -b "${databaseName}" \
-    -i magento-sample-data-1.9.2.4/magento_sample_data_for_1.9.2.4.sql
+    --databaseHost "${databaseHost}" \
+    --databasePort "${databasePort}" \
+    --databaseUser "${databaseUser}" \
+    --databasePassword "${databasePassword}" \
+    --databaseName "${databaseName}" \
+    --importFile magento-sample-data-1.9.2.4/magento_sample_data_for_1.9.2.4.sql
 
   echo "Deleting temp dir: ${tmpDir}"
   rm -rf "${tmpDir}"
