@@ -103,12 +103,12 @@ if [[ $(versionCompare "${magentoVersion}" "2.0.0") == 1 ]]; then
 
     echo "Importing sample data"
     "${importScript}" \
-      -o "${databaseHost}" \
-      -p "${databasePort}" \
-      -u "${databaseUser}" \
-      -s "${databasePassword}" \
-      -b "${databaseName}" \
-      -i magento-sample-data-1.9.2.4/magento_sample_data_for_1.9.2.4.sql
+      --databaseHost "${databaseHost}" \
+      --databasePort "${databasePort}" \
+      --databaseUser "${databaseUser}" \
+      --databasePassword "${databasePassword}" \
+      --databaseName "${databaseName}" \
+      --importFile magento-sample-data-1.9.2.4/magento_sample_data_for_1.9.2.4.sql
   else
     echo "Downloading sample data from: https://www.googleapis.com/download/storage/v1/b/tofex_vm_data/o/magento-sample-data-1.14.2.4.tar.gz?alt=media"
     curl -X GET -o magento-sample-data-1.14.2.4.tar.gz https://www.googleapis.com/download/storage/v1/b/tofex_vm_data/o/magento-sample-data-1.14.2.4.tar.gz?alt=media
@@ -117,12 +117,12 @@ if [[ $(versionCompare "${magentoVersion}" "2.0.0") == 1 ]]; then
 
     echo "Importing sample data"
     "${importScript}" \
-      -o "${databaseHost}" \
-      -p "${databasePort}" \
-      -u "${databaseUser}" \
-      -s "${databasePassword}" \
-      -b "${databaseName}" \
-      -i magento-sample-data-1.14.2.4/magento_sample_data_for_1.14.2.4.sql
+      --databaseHost "${databaseHost}" \
+      --databasePort "${databasePort}" \
+      --databaseUser "${databaseUser}" \
+      --databasePassword "${databasePassword}" \
+      --databaseName "${databaseName}" \
+      --importFile magento-sample-data-1.14.2.4/magento_sample_data_for_1.14.2.4.sql
   fi
 
   echo "Deleting temp dir: ${tmpDir}"
