@@ -26,6 +26,16 @@ Example: ${scriptName} --magentoVersion 2.3.7 --magentoMode production
 EOF
 }
 
+versionCompare() {
+  if [[ "$1" == "$2" ]]; then
+    echo "0"
+  elif [[ "$1" = $(echo -e "$1\n$2" | sort -V | head -n1) ]]; then
+    echo "1"
+  else
+    echo "2"
+  fi
+}
+
 magentoVersion=
 magentoMode=
 
@@ -45,7 +55,11 @@ if [[ -z "${magentoMode}" ]]; then
   exit 1
 fi
 
-if [[ ${magentoVersion:0:1} == 1 ]]; then
+if [[ $(versionCompare "${magentoVersion}" "2.0.0") == 1 ]]; then
+  "${currentPath}/../../ops/create-shared.sh" \
+    -f app/etc/local.xml \
+    -o
+elif [[ $(versionCompare "${magentoVersion}" "19.1.0") == 0 ]] || [[ $(versionCompare "${magentoVersion}" "19.1.0") == 2 ]]; then
   "${currentPath}/../../ops/create-shared.sh" \
     -f app/etc/local.xml \
     -o

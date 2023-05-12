@@ -120,26 +120,7 @@ echo "${repositories}"
 
 repositoryList=( $(echo "${repositories}" | tr "," "\n") )
 
-if [[ $(versionCompare "${magentoVersion}" "19.1.0") == 0 ]] || [[ $(versionCompare "${magentoVersion}" "19.1.0") == 2 ]]; then
-  echo "Creating composer project"
-  cd "${webPath}"
-  cat <<EOF | sudo tee composer.json > /dev/null
-{
-    "require": {
-        "aydin-hassan/magento-core-composer-installer": "*",
-        "openmage/magento-lts": "${magentoVersion}"
-    },
-    "extra": {
-        "magento-core-package-type": "magento-source",
-        "magento-root-dir": "."
-    }
-}
-EOF
-  composer install --ansi
-  chmod o+w "${webPath}/var" "${webPath}/var/.htaccess" "${webPath}/app/etc"
-  chmod 755 "${webPath}/mage"
-  chmod -R o+w "${webPath}/media"
-elif [[ ${magentoVersion:0:1} == 1 ]]; then
+if [[ $(versionCompare "${magentoVersion}" "2.0.0") == 1 ]]; then
   for repository in "${repositoryList[@]}"; do
     repositoryUrl=$(echo "${repository}" | cut -d"|" -f2)
     repositoryComposerUser=$(echo "${repository}" | cut -d"|" -f3)
@@ -157,6 +138,25 @@ elif [[ ${magentoVersion:0:1} == 1 ]]; then
     composer create-project --repository-url=https://composer.tofex.de/ "magento/project-${magentoEdition}-edition=${magentoVersion}-patch" --ansi --no-interaction --prefer-dist "${webPath}" 2>&1
   fi
   #find "${webPath}" -type d -exec chmod 700 {} \; && find "${webPath}" -type f -exec chmod 600 {} \;
+  chmod o+w "${webPath}/var" "${webPath}/var/.htaccess" "${webPath}/app/etc"
+  chmod 755 "${webPath}/mage"
+  chmod -R o+w "${webPath}/media"
+elif [[ $(versionCompare "${magentoVersion}" "19.1.0") == 0 ]] || [[ $(versionCompare "${magentoVersion}" "19.1.0") == 2 ]]; then
+  echo "Creating composer project"
+  cd "${webPath}"
+  cat <<EOF | sudo tee composer.json > /dev/null
+{
+    "require": {
+        "aydin-hassan/magento-core-composer-installer": "*",
+        "openmage/magento-lts": "${magentoVersion}"
+    },
+    "extra": {
+        "magento-core-package-type": "magento-source",
+        "magento-root-dir": "."
+    }
+}
+EOF
+  composer install --ansi
   chmod o+w "${webPath}/var" "${webPath}/var/.htaccess" "${webPath}/app/etc"
   chmod 755 "${webPath}/mage"
   chmod -R o+w "${webPath}/media"

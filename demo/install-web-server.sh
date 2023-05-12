@@ -19,6 +19,16 @@ Example: ${scriptName} --magentoVersion 2.3.7 --magentoEdition community --webPa
 EOF
 }
 
+versionCompare() {
+  if [[ "$1" == "$2" ]]; then
+    echo "0"
+  elif [[ "$1" = $(echo -e "$1\n$2" | sort -V | head -n1) ]]; then
+    echo "1"
+  else
+    echo "2"
+  fi
+}
+
 magentoVersion=
 magentoEdition=
 webPath=
@@ -48,16 +58,16 @@ tmpDir=$(mktemp -d -t XXXXXXXXXXXXXXXX)
 echo "Created temp dir: ${tmpDir}"
 cd "${tmpDir}"
 
-if [[ ${magentoVersion:0:1} == 1 ]]; then
+if [[ $(versionCompare "${magentoVersion}" "2.0.0") == 1 ]]; then
   if [[ -L "${webPath}/skin/frontend/rwd/default/images/media" ]]; then
     rm -f "${webPath}/skin/frontend/rwd/default/images/media"
   fi
 
   if [[ "${magentoEdition}" == "community" ]]; then
-    echo "Downloading sample data from: https://www.googleapis.com/download/storage/v1/b/tofex_vm_data/o/magento-sample-data-1.9.2.4.tar.gz?alt=media"
-    curl -X GET -o magento-sample-data-1.9.2.4.tar.gz https://www.googleapis.com/download/storage/v1/b/tofex_vm_data/o/magento-sample-data-1.9.2.4.tar.gz?alt=media
-    gunzip magento-sample-data-1.9.2.4.tar.gz | cat
-    tar -xf magento-sample-data-1.9.2.4.tar
+    echo "Downloading sample data from: https://github.com/Vinai/compressed-magento-sample-data/raw/master/compressed-magento-sample-data-1.9.2.4.tgz"
+    curl -X GET -L -o compressed-magento-sample-data-1.9.2.4.tgz https://github.com/Vinai/compressed-magento-sample-data/raw/master/compressed-magento-sample-data-1.9.2.4.tgz
+    gunzip compressed-magento-sample-data-1.9.2.4.tgz | cat
+    tar -xf compressed-magento-sample-data-1.9.2.4.tar
     mkdir -p "${webPath}"
     shopt -s dotglob
 
@@ -78,6 +88,17 @@ if [[ ${magentoVersion:0:1} == 1 ]]; then
     cp -afR magento-sample-data-1.14.2.4/privatesales/* "${webPath}/privatesales/"
     cp -afR magento-sample-data-1.14.2.4/skin/* "${webPath}/skin/"
   fi
+elif [[ $(versionCompare "${magentoVersion}" "19.1.0") == 0 ]] || [[ $(versionCompare "${magentoVersion}" "19.1.0") == 2 ]]; then
+  echo "Downloading sample data from: https://github.com/Vinai/compressed-magento-sample-data/raw/master/compressed-magento-sample-data-1.9.2.4.tgz"
+  curl -X GET -L -o compressed-magento-sample-data-1.9.2.4.tgz https://github.com/Vinai/compressed-magento-sample-data/raw/master/compressed-magento-sample-data-1.9.2.4.tgz
+  gunzip compressed-magento-sample-data-1.9.2.4.tgz | cat
+  tar -xf compressed-magento-sample-data-1.9.2.4.tar
+  mkdir -p "${webPath}"
+  shopt -s dotglob
+
+  echo "Copying sample data"
+  cp -afR magento-sample-data-1.9.2.4/media/* "${webPath}/media/"
+  cp -afR magento-sample-data-1.9.2.4/skin/* "${webPath}/skin/"
 else
   magentoVersion=$(echo "${magentoVersion}" | sed 's/-p[0-9]*$//')
 

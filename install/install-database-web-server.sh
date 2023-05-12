@@ -155,7 +155,17 @@ fi
 
 cd "${webPath}"
 
-if [[ ${magentoVersion:0:1} == 1 ]]; then
+if [[ $(versionCompare "${magentoVersion}" "2.0.0") == 1 ]]; then
+  rm -rf app/etc/local.xml
+  php -f install.php -- --license_agreement_accepted yes \
+    --db_host "${databaseHost}:${databasePort}" --db_name "${databaseName}" --db_user "${databaseUser}" --db_pass "${databasePassword}" \
+    --url "https://${mainHostName}/" --skip_url_validation --use_rewrites yes \
+    --use_secure yes --secure_base_url "https://${mainHostName}/" --use_secure_admin yes \
+    --admin_username "${adminUser}" --admin_password "${adminPassword}" \
+    --admin_firstname "${adminFirstName}" --admin_lastname "${adminLastName}" --admin_email "${adminEmail}" \
+    --locale "${defaultLocale}" --default_currency "${defaultCurrency}" --timezone "${defaultTimezone}" \
+    --encryption_key "${cryptKey}"
+elif [[ $(versionCompare "${magentoVersion}" "19.1.0") == 0 ]] || [[ $(versionCompare "${magentoVersion}" "19.1.0") == 2 ]]; then
   rm -rf app/etc/local.xml
   php -f install.php -- --license_agreement_accepted yes \
     --db_host "${databaseHost}:${databasePort}" --db_name "${databaseName}" --db_user "${databaseUser}" --db_pass "${databasePassword}" \

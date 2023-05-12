@@ -24,6 +24,16 @@ Example: ${scriptName} --magentoVersion 2.3.7 --magentoEdition community --datab
 EOF
 }
 
+versionCompare() {
+  if [[ "$1" == "$2" ]]; then
+    echo "0"
+  elif [[ "$1" = $(echo -e "$1\n$2" | sort -V | head -n1) ]]; then
+    echo "1"
+  else
+    echo "2"
+  fi
+}
+
 magentoVersion=
 magentoEdition=
 databaseHost=
@@ -80,16 +90,16 @@ if [[ -z "${importScript}" ]]; then
   exit 1
 fi
 
-if [[ ${magentoVersion:0:1} == 1 ]]; then
+if [[ $(versionCompare "${magentoVersion}" "2.0.0") == 1 ]]; then
   tmpDir=$(mktemp -d -t XXXXXXXXXXXXXXXX)
   echo "Created temp dir: ${tmpDir}"
   cd "${tmpDir}"
 
   if [[ "${magentoEdition}" == "community" ]]; then
-    echo "Downloading sample data from: https://www.googleapis.com/download/storage/v1/b/tofex_vm_data/o/magento-sample-data-1.9.2.4.tar.gz?alt=media"
-    curl -X GET -o magento-sample-data-1.9.2.4.tar.gz https://www.googleapis.com/download/storage/v1/b/tofex_vm_data/o/magento-sample-data-1.9.2.4.tar.gz?alt=media
-    gunzip magento-sample-data-1.9.2.4.tar.gz | cat
-    tar -xf magento-sample-data-1.9.2.4.tar
+    echo "Downloading sample data from: https://github.com/Vinai/compressed-magento-sample-data/raw/master/compressed-magento-sample-data-1.9.2.4.tgz"
+    curl -X GET -L -o compressed-magento-sample-data-1.9.2.4.tgz https://github.com/Vinai/compressed-magento-sample-data/raw/master/compressed-magento-sample-data-1.9.2.4.tgz
+    gunzip compressed-magento-sample-data-1.9.2.4.tgz | cat
+    tar -xf compressed-magento-sample-data-1.9.2.4.tar
 
     echo "Importing sample data"
     "${importScript}" \
@@ -114,6 +124,23 @@ if [[ ${magentoVersion:0:1} == 1 ]]; then
       -b "${databaseName}" \
       -i magento-sample-data-1.14.2.4/magento_sample_data_for_1.14.2.4.sql
   fi
+
+  echo "Deleting temp dir: ${tmpDir}"
+  rm -rf "${tmpDir}"
+elif [[ $(versionCompare "${magentoVersion}" "19.1.0") == 0 ]] || [[ $(versionCompare "${magentoVersion}" "19.1.0") == 2 ]]; then
+  echo "Downloading sample data from: https://github.com/Vinai/compressed-magento-sample-data/raw/master/compressed-magento-sample-data-1.9.2.4.tgz"
+  curl -X GET -L -o compressed-magento-sample-data-1.9.2.4.tgz https://github.com/Vinai/compressed-magento-sample-data/raw/master/compressed-magento-sample-data-1.9.2.4.tgz
+  gunzip compressed-magento-sample-data-1.9.2.4.tgz | cat
+  tar -xf compressed-magento-sample-data-1.9.2.4.tar
+
+  echo "Importing sample data"
+  "${importScript}" \
+    -o "${databaseHost}" \
+    -p "${databasePort}" \
+    -u "${databaseUser}" \
+    -s "${databasePassword}" \
+    -b "${databaseName}" \
+    -i magento-sample-data-1.9.2.4/magento_sample_data_for_1.9.2.4.sql
 
   echo "Deleting temp dir: ${tmpDir}"
   rm -rf "${tmpDir}"
