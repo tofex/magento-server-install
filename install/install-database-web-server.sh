@@ -10,27 +10,28 @@ cat >&2 << EOF
 usage: ${scriptName} options
 
 OPTIONS:
-  --help               Show this message
-  --magentoVersion     Magento version
-  --cryptKey           Crypt key
-  --adminPath          Path of administration, default: admin
-  --databaseHost       Database host, default: localhost
-  --databasePort       Database port, default: 3306
-  --databaseUser       Database user
-  --databasePassword   Database password
-  --databaseName       Database name
-  --webPath            Web path
-  --elasticsearchHost  Elasticsearch host
-  --elasticsearchPort  Elasticsearch port
-  --mainHostName       Name of main host
-  --adminUser          User name of store admin, default: admin
-  --adminPassword      Password of store admin, default: adminPassword12345
-  --adminFirstName     First name of store admin, default: Store
-  --adminLastName      Last name of store admin, default: Owner
-  --adminEmail         E-Mail address of store admin, default: admin@tofex.com
-  --defaultLocale      Language of store, default: de_DE
-  --defaultCurrency    Currency of store, default: EUR
-  --defaultTimezone    Timezone of store, default: Europe/Berlin
+  --help                  Show this message
+  --magentoVersion        Magento version
+  --cryptKey              Crypt key
+  --adminPath             Path of administration, default: admin
+  --databaseHost          Database host, default: localhost
+  --databasePort          Database port, default: 3306
+  --databaseUser          Database user
+  --databasePassword      Database password
+  --databaseName          Database name
+  --webPath               Web path
+  --elasticsearchVersion  Elasticsearch version
+  --elasticsearchHost     Elasticsearch host
+  --elasticsearchPort     Elasticsearch port
+  --mainHostName          Name of main host
+  --adminUser             User name of store admin, default: admin
+  --adminPassword         Password of store admin, default: adminPassword12345
+  --adminFirstName        First name of store admin, default: Store
+  --adminLastName         Last name of store admin, default: Owner
+  --adminEmail            E-Mail address of store admin, default: admin@tofex.com
+  --defaultLocale         Language of store, default: de_DE
+  --defaultCurrency       Currency of store, default: EUR
+  --defaultTimezone       Timezone of store, default: Europe/Berlin
 
 Example: ${scriptName}
 EOF
@@ -55,6 +56,7 @@ databaseUser=
 databasePassword=
 databaseName=
 webPath=
+elasticsearchVersion=
 elasticsearchHost=
 elasticsearchPort=
 mainHostName=
@@ -190,6 +192,16 @@ else
       exit 1
     fi
 
+    if [[ $(versionCompare "${elasticsearchVersion}" "7.0") == 0 ]] || [[ $(versionCompare "${elasticsearchVersion}" "7.0") == 2 ]]; then
+      elasticsearchEngine="elasticsearch7"
+    elif [[ $(versionCompare "${elasticsearchVersion}" "6.0") == 0 ]] || [[ $(versionCompare "${elasticsearchVersion}" "6.0") == 2 ]]; then
+      elasticsearchEngine="elasticsearch6"
+    elif [[ $(versionCompare "${elasticsearchVersion}" "5.0") == 0 ]] || [[ $(versionCompare "${elasticsearchVersion}" "5.0") == 2 ]]; then
+      elasticsearchEngine="elasticsearch5"
+    else
+      elasticsearchEngine="elasticsearch"
+    fi
+
     bin/magento setup:install "--base-url=https://${mainHostName}/" "--base-url-secure=https://${mainHostName}/" \
       "--db-host=${databaseHost}:${databasePort}" "--db-name=${databaseName}" "--db-user=${databaseUser}" "--db-password=${databasePassword}" \
       --use-secure-admin=1 --backend-frontname="${adminPath}" \
@@ -198,6 +210,7 @@ else
       --language="${defaultLocale}" --currency="${defaultCurrency}" --timezone="${defaultTimezone}" \
       --key "${cryptKey}" \
       --session-save=files --use-rewrites=1 \
+      --search-engine="${elasticsearchEngine}" \
       --elasticsearch-host "${elasticsearchHost}" \
       --elasticsearch-port "${elasticsearchPort}"
   else
