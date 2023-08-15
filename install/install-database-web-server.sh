@@ -23,6 +23,9 @@ OPTIONS:
   --elasticsearchVersion  Elasticsearch version
   --elasticsearchHost     Elasticsearch host
   --elasticsearchPort     Elasticsearch port
+  --openSearchVersion     OpenSearch version
+  --openSearchHost        OpenSearch host
+  --openSearchPort        OpenSearch port
   --mainHostName          Name of main host
   --adminUser             User name of store admin, default: admin
   --adminPassword         Password of store admin, default: adminPassword12345
@@ -59,6 +62,9 @@ webPath=
 elasticsearchVersion=
 elasticsearchHost=
 elasticsearchPort=
+openSearchVersion=
+openSearchHost=
+openSearchPort=
 mainHostName=
 adminUser=
 adminPassword=
@@ -180,39 +186,55 @@ elif [[ $(versionCompare "${magentoVersion}" "19.1.0") == 0 ]] || [[ $(versionCo
 else
   rm -rf app/etc/env.php
   if [[ $(versionCompare "${magentoVersion}" "2.4.0") == 0 ]] || [[ $(versionCompare "${magentoVersion}" "2.4.0") == 2 ]]; then
-    if [[ -z "${elasticsearchHost}" ]]; then
-      echo "No Elasticsearch host to install specified!"
+    if [[ -z "${elasticsearchHost}" ]] && [[ -z "${openSearchHost}" ]]; then
+      echo "No Elasticsearch or OpenSearch host to install specified!"
       usage
       exit 1
     fi
 
-    if [[ -z "${elasticsearchPort}" ]]; then
-      echo "No Elasticsearch port to install specified!"
+    if [[ -z "${elasticsearchPort}" ]] && [[ -z "${openSearchPort}" ]]; then
+      echo "No Elasticsearch or OpenSearch port to install specified!"
       usage
       exit 1
     fi
 
-    if [[ $(versionCompare "${elasticsearchVersion}" "7.0") == 0 ]] || [[ $(versionCompare "${elasticsearchVersion}" "7.0") == 2 ]]; then
-      elasticsearchEngine="elasticsearch7"
-    elif [[ $(versionCompare "${elasticsearchVersion}" "6.0") == 0 ]] || [[ $(versionCompare "${elasticsearchVersion}" "6.0") == 2 ]]; then
-      elasticsearchEngine="elasticsearch6"
-    elif [[ $(versionCompare "${elasticsearchVersion}" "5.0") == 0 ]] || [[ $(versionCompare "${elasticsearchVersion}" "5.0") == 2 ]]; then
-      elasticsearchEngine="elasticsearch5"
+    if [[ -n "${openSearchVersion}" ]]; then
+      bin/magento setup:install "--base-url=https://${mainHostName}/" "--base-url-secure=https://${mainHostName}/" \
+        "--db-host=${databaseHost}:${databasePort}" "--db-name=${databaseName}" "--db-user=${databaseUser}" "--db-password=${databasePassword}" \
+        --use-secure-admin=1 --backend-frontname="${adminPath}" \
+        --admin-user="${adminUser}" --admin-password="${adminPassword}" \
+        --admin-firstname="${adminFirstName}" --admin-lastname="${adminLastName}" --admin-email="${adminEmail}" \
+        --language="${defaultLocale}" --currency="${defaultCurrency}" --timezone="${defaultTimezone}" \
+        --key "${cryptKey}" \
+        --session-save=files --use-rewrites=1 \
+        --search-engine="opensearch" \
+        --opensearch-host "${openSearchHost}" \
+        --opensearch-port "${openSearchPort}"
     else
-      elasticsearchEngine="elasticsearch"
-    fi
+      if [[ $(versionCompare "${elasticsearchVersion}" "8.0") == 0 ]] || [[ $(versionCompare "${elasticsearchVersion}" "8.0") == 2 ]]; then
+        elasticsearchEngine="elasticsearch8"
+      elif [[ $(versionCompare "${elasticsearchVersion}" "7.0") == 0 ]] || [[ $(versionCompare "${elasticsearchVersion}" "7.0") == 2 ]]; then
+        elasticsearchEngine="elasticsearch7"
+      elif [[ $(versionCompare "${elasticsearchVersion}" "6.0") == 0 ]] || [[ $(versionCompare "${elasticsearchVersion}" "6.0") == 2 ]]; then
+        elasticsearchEngine="elasticsearch6"
+      elif [[ $(versionCompare "${elasticsearchVersion}" "5.0") == 0 ]] || [[ $(versionCompare "${elasticsearchVersion}" "5.0") == 2 ]]; then
+        elasticsearchEngine="elasticsearch5"
+      else
+        elasticsearchEngine="elasticsearch"
+      fi
 
-    bin/magento setup:install "--base-url=https://${mainHostName}/" "--base-url-secure=https://${mainHostName}/" \
-      "--db-host=${databaseHost}:${databasePort}" "--db-name=${databaseName}" "--db-user=${databaseUser}" "--db-password=${databasePassword}" \
-      --use-secure-admin=1 --backend-frontname="${adminPath}" \
-      --admin-user="${adminUser}" --admin-password="${adminPassword}" \
-      --admin-firstname="${adminFirstName}" --admin-lastname="${adminLastName}" --admin-email="${adminEmail}" \
-      --language="${defaultLocale}" --currency="${defaultCurrency}" --timezone="${defaultTimezone}" \
-      --key "${cryptKey}" \
-      --session-save=files --use-rewrites=1 \
-      --search-engine="${elasticsearchEngine}" \
-      --elasticsearch-host "${elasticsearchHost}" \
-      --elasticsearch-port "${elasticsearchPort}"
+      bin/magento setup:install "--base-url=https://${mainHostName}/" "--base-url-secure=https://${mainHostName}/" \
+        "--db-host=${databaseHost}:${databasePort}" "--db-name=${databaseName}" "--db-user=${databaseUser}" "--db-password=${databasePassword}" \
+        --use-secure-admin=1 --backend-frontname="${adminPath}" \
+        --admin-user="${adminUser}" --admin-password="${adminPassword}" \
+        --admin-firstname="${adminFirstName}" --admin-lastname="${adminLastName}" --admin-email="${adminEmail}" \
+        --language="${defaultLocale}" --currency="${defaultCurrency}" --timezone="${defaultTimezone}" \
+        --key "${cryptKey}" \
+        --session-save=files --use-rewrites=1 \
+        --search-engine="${elasticsearchEngine}" \
+        --elasticsearch-host "${elasticsearchHost}" \
+        --elasticsearch-port "${elasticsearchPort}"
+    fi
   else
     bin/magento setup:install "--base-url=https://${mainHostName}/" "--base-url-secure=https://${mainHostName}/" \
       "--db-host=${databaseHost}:${databasePort}" "--db-name=${databaseName}" "--db-user=${databaseUser}" "--db-password=${databasePassword}" \

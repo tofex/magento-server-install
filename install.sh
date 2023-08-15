@@ -68,7 +68,7 @@ if [[ -z "${mainHostName}" ]]; then
   mainHostName=$("${currentPath}/../core/server/host/single.sh")
 fi
 
-"${currentPath}/../core/script/run.sh" "install,database,elasticsearch:skip,webServer" "${currentPath}/install/install-database-web-server.sh" \
+"${currentPath}/../core/script/run.sh" "install,database,elasticsearch:skip,openSearch:skip,webServer" "${currentPath}/install/install-database-web-server.sh" \
   --mainHostName "${mainHostName}" \
   --adminUser "${adminUser}" \
   --adminPassword "${adminPassword}" \
