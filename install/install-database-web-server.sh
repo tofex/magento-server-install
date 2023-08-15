@@ -205,11 +205,11 @@ else
         --admin-user="${adminUser}" --admin-password="${adminPassword}" \
         --admin-firstname="${adminFirstName}" --admin-lastname="${adminLastName}" --admin-email="${adminEmail}" \
         --language="${defaultLocale}" --currency="${defaultCurrency}" --timezone="${defaultTimezone}" \
-        --key "${cryptKey}" \
+        --key="${cryptKey}" \
         --session-save=files --use-rewrites=1 \
         --search-engine="opensearch" \
-        --opensearch-host "${openSearchHost}" \
-        --opensearch-port "${openSearchPort}"
+        --opensearch-host="${openSearchHost}" \
+        --opensearch-port="${openSearchPort}"
     else
       if [[ $(versionCompare "${elasticsearchVersion}" "8.0") == 0 ]] || [[ $(versionCompare "${elasticsearchVersion}" "8.0") == 2 ]]; then
         elasticsearchEngine="elasticsearch8"
@@ -229,11 +229,11 @@ else
         --admin-user="${adminUser}" --admin-password="${adminPassword}" \
         --admin-firstname="${adminFirstName}" --admin-lastname="${adminLastName}" --admin-email="${adminEmail}" \
         --language="${defaultLocale}" --currency="${defaultCurrency}" --timezone="${defaultTimezone}" \
-        --key "${cryptKey}" \
+        --key="${cryptKey}" \
         --session-save=files --use-rewrites=1 \
         --search-engine="${elasticsearchEngine}" \
-        --elasticsearch-host "${elasticsearchHost}" \
-        --elasticsearch-port "${elasticsearchPort}"
+        --elasticsearch-host="${elasticsearchHost}" \
+        --elasticsearch-port="${elasticsearchPort}"
     fi
   else
     bin/magento setup:install "--base-url=https://${mainHostName}/" "--base-url-secure=https://${mainHostName}/" \
@@ -242,7 +242,7 @@ else
       --admin-user="${adminUser}" --admin-password="${adminPassword}" \
       --admin-firstname="${adminFirstName}" --admin-lastname="${adminLastName}" --admin-email="${adminEmail}" \
       --language="${defaultLocale}" --currency="${defaultCurrency}" --timezone="${defaultTimezone}" \
-      --key "${cryptKey}" \
+      --key="${cryptKey}" \
       --session-save=files --use-rewrites=1
   fi
 fi
