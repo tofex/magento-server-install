@@ -170,7 +170,12 @@ fi
 
 if [[ -n "${redisFPCPassword}" ]]; then
   cat <<EOF | sudo tee -a "/etc/redis/redis_${redisFPCPort}.conf" > /dev/null
+protected-mode yes
 requirepass ${redisFPCPassword}
+EOF
+else
+  cat <<EOF | sudo tee -a "/etc/redis/redis_${redisFPCPort}.conf" > /dev/null
+protected-mode no
 EOF
 fi
 

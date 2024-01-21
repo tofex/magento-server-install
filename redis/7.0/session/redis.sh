@@ -170,7 +170,12 @@ fi
 
 if [[ -n "${redisSessionPassword}" ]]; then
   cat <<EOF | sudo tee -a "/etc/redis/redis_${redisSessionPort}.conf" > /dev/null
+protected-mode yes
 requirepass ${redisSessionPassword}
+EOF
+else
+  cat <<EOF | sudo tee -a "/etc/redis/redis_${redisSessionPort}.conf" > /dev/null
+protected-mode no
 EOF
 fi
 

@@ -170,7 +170,12 @@ fi
 
 if [[ -n "${redisCachePassword}" ]]; then
   cat <<EOF | sudo tee -a "/etc/redis/redis_${redisCachePort}.conf" > /dev/null
+protected-mode yes
 requirepass ${redisCachePassword}
+EOF
+else
+  cat <<EOF | sudo tee -a "/etc/redis/redis_${redisCachePort}.conf" > /dev/null
+protected-mode no
 EOF
 fi
 
