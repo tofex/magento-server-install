@@ -77,7 +77,7 @@ if [[ ! -f /.dockerenv ]]; then
   sudo service mysql stop 2>&1
 fi
 
-echo "Creating configuration at: /etc/mysql/mysql.conf.d/mysqld.cnf"
+echo "Creating configuration at: /etc/mysql/my.cnf"
 cat <<EOF | sudo tee "/etc/mysql/my.cnf" > /dev/null
 [client]
 port = ${databasePort}
