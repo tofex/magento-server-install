@@ -142,7 +142,6 @@ socket = /var/run/mysqld/mysqld.sock
 sort_buffer_size = 2M
 table_open_cache = 400
 thread_cache_size = 32
-thread_concurrency = 10
 thread_cache_size = 8
 thread_stack = 192K
 tmpdir = /tmp
